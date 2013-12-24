@@ -127,7 +127,7 @@ var games = {
                                 "lineskip":false,
                                 "speedhack":false
                             }
-                ]
+                ],
              "supermarioadvance":
                 [
                             "Super Mario Advance",
