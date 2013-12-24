@@ -20,7 +20,7 @@ var games = {
                 [
                             "Advance Wars",
                             {
-                                "lineskip":true,
+                                "lineskip":false,
                                 "speedhack":true
                             }
                 ],
@@ -60,7 +60,7 @@ var games = {
                 [
                             "Megaman & Bass",
                             {
-                                "lineskip":true,
+                                "lineskip":false,
                                 "speedhack":true
                             }
                 ],
@@ -126,6 +126,14 @@ var games = {
                             {
                                 "lineskip":false,
                                 "speedhack":false
+                            }
+                ]
+             "supermarioadvance":
+                [
+                            "Super Mario Advance",
+                            {
+                                "lineskip":false,
+                                "speedhack":true
                             }
                 ]
 };
