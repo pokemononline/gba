@@ -337,13 +337,6 @@ ARMInstructionSet.prototype.updateBasePreIncrement = function (operand, offset) 
     this.guardRegisterWrite(baseRegisterNumber | 0, result | 0);
     return result | 0;
 }
-/*ARMInstructionSet.prototype.solveForRegCount = function () {
-    //Solve for the number of items in the register lists of multi-load/store:
-    for (var rListPosition = 0, count = 0; rListPosition < 0x10; rListPosition = ((rListPosition | 0) + 1) | 0) {
-        count = ((count | 0) + ((parentObj.execute & (1 << rListPosition)) >> rListPosition)) | 0;
-    }
-    return count | 0;
-}*/
 ARMInstructionSet.prototype.BX = function (parentObj, operand2OP) {
     //Branch & eXchange:
     var address = parentObj.read0OffsetRegister() | 0;

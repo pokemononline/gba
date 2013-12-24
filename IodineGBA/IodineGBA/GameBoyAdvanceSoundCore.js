@@ -721,8 +721,8 @@ GameBoyAdvanceSound.prototype.writeSOUNDBIAS0 = function (data) {
     //NR62:
     data = data | 0;
     this.audioJIT();
-    this.mixerSoundBIAS &= 0x300;
-    this.mixerSoundBIAS |= (data | 0);
+    this.mixerSoundBIAS = this.mixerSoundBIAS & 0x300;
+    this.mixerSoundBIAS = this.mixerSoundBIAS | data;
     this.nr62 = data | 0;
 }
 GameBoyAdvanceSound.prototype.readSOUNDBIAS0 = function () {
@@ -733,10 +733,10 @@ GameBoyAdvanceSound.prototype.writeSOUNDBIAS1 = function (data) {
     //NR63:
     data = data | 0;
     this.audioJIT();
-    this.mixerSoundBIAS &= 0xFF;
-    this.mixerSoundBIAS |= (data & 0x3) << 8;
+    this.mixerSoundBIAS = this.mixerSoundBIAS & 0xFF;
+    this.mixerSoundBIAS = this.mixerSoundBIAS | ((data & 0x3) << 8);
     this.PWMWidthShadow = 0x200 >> ((data & 0xC0) >> 6);
-    this.PWMBitDepthMaskShadow = (this.PWMWidthShadow - 1) << (1 + ((data & 0xC0) >> 6)); 
+    this.PWMBitDepthMaskShadow = ((this.PWMWidthShadow | 0) - 1) << (1 + ((data & 0xC0) >> 6));
     this.nr63 = data | 0;
 }
 GameBoyAdvanceSound.prototype.readSOUNDBIAS1 = function () {
