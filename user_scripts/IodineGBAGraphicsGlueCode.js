@@ -120,7 +120,7 @@ GlueCodeGfx.prototype.copyBuffer = function (buffer) {
             }
         }
         this.swizzledFrameReady.push(swizzledFrame);
-        if (!window.requestAnimationFrame) {
+        if (!window.requestAnimationFrame || navigator.platform === "iPad" || navigator.platform === "iPhone" || navigator.platform === "iPod") {
             this.requestDraw();
         }
         else if (!this.didRAF) {
