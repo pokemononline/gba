@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -53,7 +53,7 @@ GameBoyAdvanceGraphics.prototype.initializeIO = function () {
     this.BGMosaic = [false, false, false, false];
     this.BGPalette256 = [false, false, false, false];
     this.BGScreenBaseBlock = getUint8Array(0x4);
-    this.BGDisplayOverflow = [false, false, false, false];
+    this.BGDisplayOverflow = [false, false];
     this.BGScreenSize = getUint8Array(0x4);
     this.WINBG0Outside = false;
     this.WINBG1Outside = false;
@@ -376,7 +376,7 @@ GameBoyAdvanceGraphics.prototype.incrementScanLineQueue = function () {
     }
 }
 GameBoyAdvanceGraphics.prototype.isRenderingCheckPreprocess = function () {
-    var isInVisibleLines = (!this.forcedBlank && (this.currentScanLine | 0) < 160);
+    var isInVisibleLines = (!this.forcedBlank && !this.inVBlank);
     this.isRendering = (isInVisibleLines && !this.inHBlank);
     this.isOAMRendering = (isInVisibleLines && (!this.inHBlank || !this.HBlankIntervalFree));
 }
@@ -540,14 +540,12 @@ GameBoyAdvanceGraphics.prototype.writeBG0CNT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
     this.BGScreenBaseBlock[0] = data & 0x1F;
-    this.BGDisplayOverflow[0] = ((data & 0x20) == 0x20);    //Note: Only applies to BG2/3 supposedly.
     this.BGScreenSize[0] = (data & 0xC0) >> 6;
     this.bg0Renderer.screenSizePreprocess();
     this.bg0Renderer.screenBaseBlockPreprocess();
 }
 GameBoyAdvanceGraphics.prototype.readBG0CNT1 = function () {
     return (this.BGScreenBaseBlock[0] |
-    (this.BGDisplayOverflow[0] ? 0x20 : 0) |
     (this.BGScreenSize[0] << 6));
 }
 GameBoyAdvanceGraphics.prototype.writeBG1CNT0 = function (data) {
@@ -572,14 +570,12 @@ GameBoyAdvanceGraphics.prototype.writeBG1CNT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
     this.BGScreenBaseBlock[1] = data & 0x1F;
-    this.BGDisplayOverflow[1] = ((data & 0x20) == 0x20);    //Note: Only applies to BG2/3 supposedly.
     this.BGScreenSize[1] = (data & 0xC0) >> 6;
     this.bg1Renderer.screenSizePreprocess();
     this.bg1Renderer.screenBaseBlockPreprocess();
 }
 GameBoyAdvanceGraphics.prototype.readBG1CNT1 = function () {
     return (this.BGScreenBaseBlock[1] |
-    (this.BGDisplayOverflow[1] ? 0x20 : 0) |
     (this.BGScreenSize[1] << 6));
 }
 GameBoyAdvanceGraphics.prototype.writeBG2CNT0 = function (data) {
@@ -606,7 +602,7 @@ GameBoyAdvanceGraphics.prototype.writeBG2CNT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
     this.BGScreenBaseBlock[2] = data & 0x1F;
-    this.BGDisplayOverflow[2] = ((data & 0x20) == 0x20);
+    this.BGDisplayOverflow[0] = ((data & 0x20) == 0x20);
     this.BGScreenSize[2] = (data & 0xC0) >> 6;
     this.bg2TextRenderer.screenSizePreprocess();
     this.bg2MatrixRenderer.screenSizePreprocess();
@@ -616,7 +612,7 @@ GameBoyAdvanceGraphics.prototype.writeBG2CNT1 = function (data) {
 }
 GameBoyAdvanceGraphics.prototype.readBG2CNT1 = function () {
     return (this.BGScreenBaseBlock[2] |
-    (this.BGDisplayOverflow[2] ? 0x20 : 0) |
+    (this.BGDisplayOverflow[0] ? 0x20 : 0) |
     (this.BGScreenSize[2] << 6));
 }
 GameBoyAdvanceGraphics.prototype.writeBG3CNT0 = function (data) {
@@ -643,7 +639,7 @@ GameBoyAdvanceGraphics.prototype.writeBG3CNT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
     this.BGScreenBaseBlock[3] = data & 0x1F;
-    this.BGDisplayOverflow[3] = ((data & 0x20) == 0x20);
+    this.BGDisplayOverflow[1] = ((data & 0x20) == 0x20);
     this.BGScreenSize[3] = (data & 0xC0) >> 6;
     this.bg3TextRenderer.screenSizePreprocess();
     this.bg3MatrixRenderer.screenSizePreprocess();
@@ -653,7 +649,7 @@ GameBoyAdvanceGraphics.prototype.writeBG3CNT1 = function (data) {
 }
 GameBoyAdvanceGraphics.prototype.readBG3CNT1 = function () {
     return (this.BGScreenBaseBlock[3] |
-    (this.BGDisplayOverflow[3] ? 0x20 : 0) |
+    (this.BGDisplayOverflow[1] ? 0x20 : 0) |
     (this.BGScreenSize[3] << 6));
 }
 GameBoyAdvanceGraphics.prototype.writeBG0HOFS0 = function (data) {

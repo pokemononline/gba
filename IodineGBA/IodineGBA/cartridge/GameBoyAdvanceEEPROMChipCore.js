@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -149,7 +149,7 @@ GameBoyAdvanceEEPROMChip.prototype.addressModeForWrite = function (data) {
     switch (this.bitsProcessed | 0) {
         case 0x6:
             //6 bit address mode:
-            if (this.IOCore.dma.wordCountShadow[3] < 0x4A && (this.largestSizePossible | 0) == 0x200) {
+            if (this.IOCore.dma.channels[3].wordCountShadow < 0x4A && (this.largestSizePossible | 0) == 0x200) {
                 this.changeModeToActive();
             }
             else {
@@ -168,7 +168,7 @@ GameBoyAdvanceEEPROMChip.prototype.addressModeForRead = function (data) {
     switch (this.bitsProcessed | 0) {
         case 0x6:
             //6 bit address mode:
-            if (this.IOCore.dma.wordCountShadow[3] < 0xA && (this.largestSizePossible | 0) == 0x200) {
+            if (this.IOCore.dma.channels[3].wordCountShadow < 0xA && (this.largestSizePossible | 0) == 0x200) {
                 this.changeModeToActive();
             }
             else {

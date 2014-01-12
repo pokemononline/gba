@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -90,10 +90,10 @@ GameBoyAdvanceIRQ.prototype.nextEventTime = function () {
     clocks = this.findClosestEvent(clocks | 0, this.IOCore.timer.nextTimer2IRQEventTime() | 0, 0x20) | 0;
     clocks = this.findClosestEvent(clocks | 0, this.IOCore.timer.nextTimer3IRQEventTime() | 0, 0x40) | 0;
     clocks = this.findClosestEvent(clocks | 0, this.IOCore.serial.nextIRQEventTime() | 0, 0x80) | 0;
-    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.nextDMA0IRQEventTime() | 0, 0x100) | 0;
-    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.nextDMA1IRQEventTime() | 0, 0x200) | 0;
-    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.nextDMA2IRQEventTime() | 0, 0x400) | 0;
-    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.nextDMA3IRQEventTime() | 0, 0x800) | 0;
+    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.channels[0].nextIRQEventTime() | 0, 0x100) | 0;
+    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.channels[1].nextIRQEventTime() | 0, 0x200) | 0;
+    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.channels[2].nextIRQEventTime() | 0, 0x400) | 0;
+    clocks = this.findClosestEvent(clocks | 0, this.IOCore.dma.channels[3].nextIRQEventTime() | 0, 0x800) | 0;
     //JoyPad input state should never update while we're in halt:
     //clocks = this.findClosestEvent(clocks | 0, this.IOCore.joypad.nextIRQEventTime() | 0, 0x1000) | 0;
     //clocks = this.findClosestEvent(clocks | 0, this.IOCore.cartridge.nextIRQEventTime() | 0, 0x2000) | 0;

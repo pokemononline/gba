@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ GameBoyAdvanceAffineBGRenderer.prototype.renderScanLine = function (line, BGObje
     }
     for (var position = 0; position < 240; position = ((position | 0) + 1) | 0, x = ((x | 0) + (this.actualBGdx | 0)) | 0, y = ((y | 0) + (this.actualBGdy | 0)) | 0) {
         //Fetch pixel:
-        this.scratchBuffer[position | 0] = (this.priorityFlag | 0) | (BGObject.fetchPixel(x >> 8, y >> 8) | 0);
+        this.scratchBuffer[position | 0] = this.priorityFlag | BGObject.fetchPixel(x >> 8, y >> 8);
     }
     if (this.gfx.BGMosaic[this.BGLayer & 3]) {
         //Pixelize the line horizontally:

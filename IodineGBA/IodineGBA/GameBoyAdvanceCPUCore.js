@@ -677,10 +677,14 @@ GameBoyAdvanceCPU.prototype.read32 = function (address) {
     //Updating the address bus away from PC fetch:
     this.IOCore.wait.NonSequentialBroadcast();
     var data = this.memory.memoryRead32(address >>> 0) | 0;
-    var real_output = ((address & 0x3) == 0) ? data : ((data << ((4 - (address & 0x3)) << 3)) | (data >>> ((address & 0x3) << 3)));
+    //Unaligned access gets data rotated right:
+    if ((address & 0x3) != 0) {
+        //Rotate word right:
+        data = (data << ((4 - (address & 0x3)) << 3)) | (data >>> ((address & 0x3) << 3));
+    }
     //Updating the address bus back to PC fetch:
     this.IOCore.wait.NonSequentialBroadcast();
-    return real_output | 0;
+    return data | 0;
 }
 GameBoyAdvanceCPU.prototype.read16 = function (address) {
     address = address | 0;

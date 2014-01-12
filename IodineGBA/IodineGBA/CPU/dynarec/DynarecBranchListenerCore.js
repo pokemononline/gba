@@ -109,6 +109,23 @@ DynarecBranchListenerCore.prototype.enter = function () {
    if (this.CPUCore.settings.dynarecEnabled) {
        //Execute our compiled code:
        this.currentCache.execute();
+       //Check what executor to use:
+       if ((this.CPUCore.pipelineInvalid | 0) > 1) {
+           //Pipeline has a bubble:
+           if (this.CPUCore.processIRQ) {
+               //IRQ Special Stall:
+               this.CPUCore.executeIteration = this.CPUCore.executeIRQ;
+           }
+           else {
+               //Normal branch Stall:
+               this.CPUCore.executeIteration = this.CPUCore.executeBubble;
+           }
+       }
+       else {
+           //Normal full pipeline:
+           this.CPUCore.pipelineInvalid >>= 1;
+           this.CPUCore.executeIteration = this.CPUCore.executeIterationRegular;
+       }
    }
 }
 DynarecBranchListenerCore.prototype.isAddressSafe = function (address) {

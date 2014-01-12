@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -89,5 +89,5 @@ GameBoyAdvanceBGMatrixRenderer.prototype.characterBaseBlockPreprocess = function
     this.BGCharacterBaseBlock = this.gfx.BGCharacterBaseBlock[this.BGLayer & 3] << 14;
 }
 GameBoyAdvanceBGMatrixRenderer.prototype.displayOverflowPreprocess = function () {
-    this.BGDisplayOverflow = this.gfx.BGDisplayOverflow[this.BGLayer & 3];
+    this.BGDisplayOverflow = this.gfx.BGDisplayOverflow[this.BGLayer & 1];
 }

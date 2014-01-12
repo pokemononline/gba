@@ -96,10 +96,11 @@ GameBoyAdvanceOBJRenderer.prototype.renderSprite = function (line, sprite, isOBJ
         var ycoord = sprite.ycoord;
         var yOffset = line - ycoord;
         //Overflow Correction:
-        if (ycoord + ySize > 0x1FF) {
-            yOffset -= 0x200;
-        }
-        else if (yOffset < 0) {
+        if (yOffset < 0 || (ycoord + ySize) > 0x100) {
+            /*
+             HW re-offsets any "negative" y-coord values to on-screen unsigned.
+             Also a bug triggers this on 8-bit ending coordinate overflow from large sprites.
+             */
             yOffset += 0x100;
         }
         //Make a sprite line:
