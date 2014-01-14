@@ -179,6 +179,10 @@ function setPreference(prefObj) {
 function registerROM() {
     clearTempString();
     processDownload(this, attachROM);
+    if (navigator.platform === "iPad" || navigator.platform === "iPhone" || navigator.platform === "iPod") {
+        Iodine.setSpeed(0.4);
+        Iodine.disableAudio();
+    }
     Iodine.play();
 }
 function registerBlitterHandler() {
