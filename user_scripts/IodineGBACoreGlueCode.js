@@ -68,7 +68,7 @@ var games = {
                 [
                             "Pokemon Flora Sky Rom Hack",
                             {
-                                "lineskip":true,
+                                "lineskip":false,
                                 "speedhack":true
                             }
                 ],
@@ -76,7 +76,7 @@ var games = {
                 [
                             "Pokemon Emerald",
                             {
-                                "lineskip":true,
+                                "lineskip":false,
                                 "speedhack":true
                             }
                 ],
@@ -100,7 +100,7 @@ var games = {
                 [
                             "Pokemon Fire Red",
                             {
-                                "lineskip":true,
+                                "lineskip":false,
                                 "speedhack":true
                             }
                 ],
@@ -133,7 +133,31 @@ var games = {
                             "Super Mario Advance",
                             {
                                 "lineskip":false,
-                                "speedhack":true
+                                "speedhack":false
+                            }
+                ],
+              "bubblebobble":
+                [
+                            "Bubble Bobble",
+                            {
+                                "lineskip":false,
+                                "speedhack":false
+                            }
+                ],
+            "simpsons":
+                [
+                            "The Simpsons: Road Rage",
+                            {
+                                "lineskip":false,
+                                "speedhack":false
+                            }
+                ],
+            "sonicpinball":
+                [
+                            "Sonic Pinball",
+                            {
+                                "lineskip":false,
+                                "speedhack":false
                             }
                 ]
 };
@@ -179,7 +203,7 @@ function setPreference(prefObj) {
 function registerROM() {
     clearTempString();
     processDownload(this, attachROM);
-    if (navigator.platform === "iPad" || navigator.platform === "iPhone" || navigator.platform === "iPod") {
+    if (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/iPad/i)) {
         Iodine.setSpeed(0.4);
         Iodine.disableAudio();
     }

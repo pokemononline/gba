@@ -452,13 +452,13 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO8 = function
         return parentObj.gfx.readWINOUT1() | 0;
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C] = this.memory.readUnused0;
+    readIO[0x4C] = this.encapsulateUnusedIORead(this.memory.readUnused0, 0x4C);
     //400004Dh - MOSAIC - Mosaic Size (W)
-    readIO[0x4D] = this.memory.readUnused1;
+    readIO[0x4D] = this.encapsulateUnusedIORead(this.memory.readUnused1, 0x4D);
     //400004Eh - NOT USED - ZERO
-    readIO[0x4E] = this.memory.readUnused2;
+    readIO[0x4E] = this.encapsulateUnusedIORead(this.memory.readUnused2, 0x4E);
     //400004Fh - NOT USED - ZERO
-    readIO[0x4F] = this.memory.readUnused3;
+    readIO[0x4F] = this.encapsulateUnusedIORead(this.memory.readUnused3, 0x4F);
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     readIO[0x50] = function (parentObj) {
         return parentObj.gfx.readBLDCNT0() | 0;
@@ -622,13 +622,13 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO8 = function
     //400008Bh - NOT USED - ZERO
     readIO[0x8B] = this.memory.readZero;
     //400008Ch - NOT USED - GLITCHED
-    readIO[0x8C] = this.memory.readUnused0;
+    readIO[0x8C] = this.encapsulateUnusedIORead(this.memory.readUnused0, 0x8C);
     //400008Dh - NOT USED - GLITCHED
-    readIO[0x8D] = this.memory.readUnused1;
+    readIO[0x8D] = this.encapsulateUnusedIORead(this.memory.readUnused1, 0x8D);
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8E] = this.memory.readUnused2;
+    readIO[0x8E] = this.encapsulateUnusedIORead(this.memory.readUnused2, 0x8E);
     //400008Fh - NOT USED - GLITCHED
-    readIO[0x8F] = this.memory.readUnused3;
+    readIO[0x8F] = this.encapsulateUnusedIORead(this.memory.readUnused3, 0x8F);
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90] = function (parentObj) {
         parentObj.IOCore.updateTimerClocking();
@@ -1078,9 +1078,9 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO16 = functio
         return parentObj.gfx.readWINOUT0() | (parentObj.gfx.readWINOUT1() << 8);
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C >> 1] = this.memory.readUnused16;
+    readIO[0x4C >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x4C >> 1);
     //400004Eh - NOT USED - ZERO
-    readIO[0x4E >> 1] = this.memory.readUnused16;
+    readIO[0x4E >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x4E >> 1);
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     readIO[0x50 >> 1] = function (parentObj) {
         return parentObj.gfx.readBLDCNT0() | (parentObj.gfx.readBLDCNT1() << 8);
@@ -1180,9 +1180,9 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO16 = functio
     //400008Ah - NOT USED - ZERO
     readIO[0x8A >> 1] = this.memory.readZero;
     //400008Ch - NOT USED - GLITCHED
-    readIO[0x8C >> 1] = this.memory.readUnused16;
+    readIO[0x8C >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x8C >> 1);
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8E >> 1] = this.memory.readUnused16;
+    readIO[0x8E >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x8E >> 1);
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90 >> 1] = function (parentObj) {
         parentObj.IOCore.updateTimerClocking();
@@ -1449,7 +1449,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
         (parentObj.gfx.readWINOUT1() << 24);
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C >> 2] = this.memory.readUnused32;
+    readIO[0x4C >> 2] = this.encapsulateUnusedIORead(this.memory.readUnused32, 0x4C >> 2);
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     //4000052h - BLDALPHA - Alpha Blending Coefficients (R/W)
     readIO[0x50 >> 2] = function (parentObj) {
@@ -1538,7 +1538,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
     }
     //400008Ch - NOT USED - GLITCHED
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8C >> 2] = this.memory.readUnused32;
+    readIO[0x8C >> 2] = this.encapsulateUnusedIORead(this.memory.readUnused32, 0x8C >> 2);
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     //4000092h - WAVE_RAM0_H - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90 >> 2] = function (parentObj) {
@@ -1745,22 +1745,28 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused8 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.memory.readUnused0;
-        readIO[from++] = this.memory.readUnused1;
-        readIO[from++] = this.memory.readUnused2;
-        readIO[from++] = this.memory.readUnused3;
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused0, from);
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused1, from);
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused2, from);
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused3, from);
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused16 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.memory.readUnused16;
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused16, from);
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused32 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.memory.readUnused32;
+        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused32, from);
+    }
+}
+GameBoyAdvanceMemoryDispatchGenerator.prototype.encapsulateUnusedIORead = function (unusedFunc, address) {
+    address = address | 0x4000000;
+    return function (parentObj) {
+        return unusedFunc(parentObj, address | 0) | 0;
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO8 = function () {
