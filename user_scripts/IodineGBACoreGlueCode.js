@@ -152,6 +152,14 @@ var games = {
                                 "speedhack":false
                             }
                 ],
+            "gba_video_pokemon_1":
+                [
+                            "Pokemon Video Pak 1",
+                            {
+                                "lineskip":false,
+                                "speedhack":true
+                            }
+                ],
             "sonicpinball":
                 [
                             "Sonic Pinball",
