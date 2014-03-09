@@ -212,7 +212,6 @@ function registerROM() {
     clearTempString();
     processDownload(this, attachROM);
     if (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/iPad/i)) {
-        Iodine.setSpeed(0.4);
         Iodine.disableAudio();
     }
     Iodine.play();

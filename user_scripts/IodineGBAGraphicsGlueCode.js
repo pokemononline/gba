@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -107,7 +107,12 @@ GlueCodeGfx.prototype.getBuffer = function (canvasContext, width, height) {
 GlueCodeGfx.prototype.copyBuffer = function (buffer) {
     if (this.graphicsFound) {
         if (this.swizzledFrameFree.length == 0) {
-           this.swizzledFrameFree.push(this.swizzledFrameReady.shift());
+            if (this.didRAF) {
+                this.requestDrawSingle();
+            }
+            else {
+                this.swizzledFrameFree.push(this.swizzledFrameReady.shift());
+            }
         }
         var swizzledFrame = this.swizzledFrameFree.shift();
         var length = swizzledFrame.length;
@@ -138,7 +143,7 @@ GlueCodeGfx.prototype.requestRAFDraw = function () {
     this.didRAF = true;
     this.requestDraw();
 }
-GlueCodeGfx.prototype.requestDraw = function () {
+GlueCodeGfx.prototype.requestDrawSingle = function () {
     if (this.swizzledFrameReady.length > 0) {
         var canvasData = this.canvasBuffer.data;
         var bufferIndex = 0;
@@ -152,6 +157,9 @@ GlueCodeGfx.prototype.requestDraw = function () {
         this.swizzledFrameFree.push(swizzledFrame);
         this.graphicsBlit();
     }
+}
+GlueCodeGfx.prototype.requestDraw = function () {
+    this.requestDrawSingle();
     if (this.didRAF) {
         var parentObj = this;
         window.requestAnimationFrame(function () {
