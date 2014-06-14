@@ -194,55 +194,55 @@ GameBoyAdvanceSWI.prototype.RegisterRAMReset = function () {
     if ((control & 0x1) == 0x1) {
         //Clear 256K on-board WRAM
         for (var address = 0x2000000; address < 0x2040000; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x2) == 0x2) {
         //Clear 32K in-chip WRAM
         for (var address = 0x3000000; address < 0x3008000; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x4) == 0x4) {
         //Clear Palette
         for (var address = 0x5000000; address < 0x5000400; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x8) == 0x8) {
         //Clear VRAM
         for (var address = 0x6000000; address < 0x6018000; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x10) == 0x10) {
         //Clear OAM
         for (var address = 0x7000000; address < 0x7000400; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x20) == 0x20) {
         //Reset SIO registers
         for (var address = 0x4000120; address < 0x4000130; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x40) == 0x40) {
         //Reset Sound registers
         for (var address = 0x4000060; address < 0x40000A8; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
     if ((control & 0x80) == 0x80) {
         //Reset all other registers
         for (var address = 0x4000000; address < 0x4000060; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
         for (var address = 0x4000100; address < 0x4000120; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
         for (var address = 0x4000130; address < 0x4000300; address += 4) {
-            this.IOCore.memory.memoryWrite32(address >>> 0, 0);
+            this.IOCore.memory.memoryWrite32(address | 0, 0);
         }
     }
 }
@@ -289,7 +289,7 @@ GameBoyAdvanceSWI.prototype.DivArm = function () {
     this.CPUCore.registers[3] = Math.abs(result | 0) | 0;
 }
 GameBoyAdvanceSWI.prototype.Sqrt = function () {
-    this.CPUCore.registers[0] = Math.sqrt(this.CPUCore.registers[0] >>> 0) | 0;
+    this.CPUCore.registers[0] = Math.sqrt(this.CPUCore.registers[0] | 0) | 0;
 }
 GameBoyAdvanceSWI.prototype.ArcTan = function () {
     this.CPUCore.registers[0] = Math.max(Math.min(Math.atan(((this.CPUCore.registers[0] << 16) >> 16) / 0x4000) * (0x2000 * Math.PI), 0x4000), -0x4000) | 0;
@@ -338,7 +338,7 @@ GameBoyAdvanceSWI.prototype.CpuSet = function () {
     if (is32) {
         while (count-- > 0) {
             if (source >= 0x4000 && destination >= 0x4000) {
-                this.IOCore.memory.memoryWrite32(destination >>> 0, this.IOCore.memory.memoryRead32(source >>> 0) | 0);
+                this.IOCore.memory.memoryWrite32(destination | 0, this.IOCore.memory.memoryRead32(source | 0) | 0);
             }
             if (!isFixed) {
                 source += 0x4;
@@ -349,7 +349,7 @@ GameBoyAdvanceSWI.prototype.CpuSet = function () {
     else {
         while (count-- > 0) {
             if (source >= 0x4000 && destination >= 0x4000) {
-                this.IOCore.memory.memoryWrite16(destination >>> 0, this.IOCore.memory.memoryRead16(source >>> 0) | 0);
+                this.IOCore.memory.memoryWrite16(destination | 0, this.IOCore.memory.memoryRead16(source | 0) | 0);
             }
             if (!isFixed) {
                 source += 0x2;
@@ -367,10 +367,10 @@ GameBoyAdvanceSWI.prototype.CpuFastSet = function () {
     var currentRead = 0;
     while (count-- > 0) {
         if (source >= 0x4000) {
-            currentRead = this.IOCore.memory.memoryRead32(source >>> 0) | 0;
+            currentRead = this.IOCore.memory.memoryRead32(source | 0) | 0;
             for (var i = 0; i < 0x8; ++i) {
                 if (destination >= 0x4000) {
-                    this.IOCore.memory.memoryWrite32(destination >>> 0, currentRead | 0);
+                    this.IOCore.memory.memoryWrite32(destination | 0, currentRead | 0);
                 }
                 destination += 0x4;
             }
@@ -388,19 +388,19 @@ GameBoyAdvanceSWI.prototype.BgAffineSet = function () {
     var destination = this.CPUCore.registers[1];
     var numberCalculations = this.CPUCore.registers[2];
     while (numberCalculations-- > 0) {
-        var cx = this.IOCore.memory.memoryRead32(source >>> 0);
+        var cx = this.IOCore.memory.memoryRead32(source | 0);
         source += 0x4;
-        var cy = this.IOCore.memory.memoryRead32(source >>> 0);
+        var cy = this.IOCore.memory.memoryRead32(source | 0);
         source += 0x4;
-        var dispx = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var dispx = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var dispy = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var dispy = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var rx = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var rx = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var ry = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var ry = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var theta = (this.IOCore.memory.memoryRead16(source >>> 0) >> 8) / 0x80 * Math.PI;
+        var theta = (this.IOCore.memory.memoryRead16(source | 0) >> 8) / 0x80 * Math.PI;
         source += 0x4;
         var cosAngle = Math.cos(theta);
         var sineAngle = Math.sin(theta);
@@ -408,17 +408,17 @@ GameBoyAdvanceSWI.prototype.BgAffineSet = function () {
         var dmx = rx * sineAngle;
         var dy = ry * sineAngle;
         var dmy = ry * cosAngle;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dx | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dx | 0);
         destination += 2;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, (-dmx) | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, (-dmx) | 0);
         destination += 2;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dy | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dy | 0);
         destination += 2;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dmy | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dmy | 0);
         destination += 2;
-        this.IOCore.memory.memoryWrite32(destination >>> 0, (cx - dx * dispx + dmx * dispy) | 0);
+        this.IOCore.memory.memoryWrite32(destination | 0, (cx - dx * dispx + dmx * dispy) | 0);
         destination += 4;
-        this.IOCore.memory.memoryWrite32(destination >>> 0, (cy - dy * dispx + dmy * dispy) | 0);
+        this.IOCore.memory.memoryWrite32(destination | 0, (cy - dy * dispx + dmy * dispy) | 0);
         destination += 4;
     }
 }
@@ -428,11 +428,11 @@ GameBoyAdvanceSWI.prototype.ObjAffineSet = function () {
     var numberCalculations = this.CPUCore.registers[2];
     var offset = this.CPUCore.registers[3];
     while (numberCalculations-- > 0) {
-        var rx = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var rx = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var ry = (this.IOCore.memory.memoryRead16(source >>> 0) << 16) >> 16;
+        var ry = (this.IOCore.memory.memoryRead16(source | 0) << 16) >> 16;
         source += 0x2;
-        var theta = (this.IOCore.memory.memoryRead16(source >>> 0) >> 8) / 0x80 * Math.PI;
+        var theta = (this.IOCore.memory.memoryRead16(source | 0) >> 8) / 0x80 * Math.PI;
         source += 0x4;
         var cosAngle = Math.cos(theta);
         var sineAngle = Math.sin(theta);
@@ -440,13 +440,13 @@ GameBoyAdvanceSWI.prototype.ObjAffineSet = function () {
         var dmx = rx * sineAngle;
         var dy = ry * sineAngle;
         var dmy = ry * cosAngle;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dx | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dx | 0);
         destination += offset;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, (-dmx) | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, (-dmx) | 0);
         destination += offset;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dy | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dy | 0);
         destination += offset;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, dmy | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, dmy | 0);
         destination += offset;
     }
 }
@@ -454,13 +454,13 @@ GameBoyAdvanceSWI.prototype.BitUnPack = function () {
     var source = this.CPUCore.registers[0];
     var destination = this.CPUCore.registers[1];
     var unpackSource = this.CPUCore.registers[2];
-    var length = this.IOCore.memory.memoryRead16(unpackSource >>> 0);
+    var length = this.IOCore.memory.memoryRead16(unpackSource | 0);
     unpackSource += 0x2;
-    var widthSource = this.IOCore.memory.memoryRead16(unpackSource >>> 0);
+    var widthSource = this.IOCore.memory.memoryRead16(unpackSource | 0);
     unpackSource += 0x1;
-    var widthDestination = this.IOCore.memory.memoryReadFast8(unpackSource >>> 0);
+    var widthDestination = this.IOCore.memory.memoryReadFast8(unpackSource | 0);
     unpackSource += 0x1;
-    var offset = this.IOCore.memory.memoryRead32(unpackSource >>> 0);
+    var offset = this.IOCore.memory.memoryRead32(unpackSource | 0);
     var dataOffset = offset & 0x7FFFFFFF;
     var zeroData = (offset < 0);
     var bitDiff = widthDestination - widthSource;
@@ -468,7 +468,7 @@ GameBoyAdvanceSWI.prototype.BitUnPack = function () {
         var resultWidth = 0;
         while (length > 0) {
             var result = 0;
-            var readByte = this.IOCore.memory.memoryReadFast8((source++) >>> 0);
+            var readByte = this.IOCore.memory.memoryReadFast8((source++) | 0);
             for (var index = 0, widthIndex = 0; index < 8; index += widthSource, widthIndex += widthDestination) {
                 var temp = (readByte >> index) & ((widthSource << 1) - 1);
                 if (temp > 0 || zeroData) {
@@ -480,13 +480,13 @@ GameBoyAdvanceSWI.prototype.BitUnPack = function () {
             resultWidth += widthIndex;
             if (resultWidth == 32) {
                 resultWidth = 0;
-                this.IOCore.memory.memoryWrite32(destination >>> 0, result | 0);
+                this.IOCore.memory.memoryWrite32(destination | 0, result | 0);
                 destination += 4;
                 length -= 4;
             }
         }
         if (resultWidth > 0) {
-            this.IOCore.memory.memoryWrite32(destination >>> 0, result | 0);
+            this.IOCore.memory.memoryWrite32(destination | 0, result | 0);
         }
     }
 }
@@ -508,47 +508,47 @@ GameBoyAdvanceSWI.prototype.RLUnCompVram = function () {
 GameBoyAdvanceSWI.prototype.Diff8bitUnFilterWram = function () {
     var source = this.CPUCore.registers[0] & -4;
     var destination = this.CPUCore.registers[1] | 0;
-    var descriptor = this.IOCore.memory.memoryRead32(source >>> 0) | 0;
-    var output = this.IOCore.memory.memoryReadFast8(destination >>> 0) | 0;
+    var descriptor = this.IOCore.memory.memoryRead32(source | 0) | 0;
+    var output = this.IOCore.memory.memoryReadFast8(destination | 0) | 0;
     var wordSize = descriptor & 0x3;
     for (var size = descriptor >>> 8; (size | 0) > 0; size = ((size | 0) - (wordSize | 0)) | 0) {
-        source = ((source >>> 0) + (wordSize >>> 0)) >>> 0;
-        var data = this.IOCore.memory.memoryReadFast8(source >>> 0) | 0;
+        source = ((source | 0) + (wordSize | 0)) | 0;
+        var data = this.IOCore.memory.memoryReadFast8(source | 0) | 0;
         output = ((data & 0xFF) + (output & 0xFF)) & 0xFF;
-        destination = ((destination >>> 0) + (wordSize >>> 0)) >>> 0;
-        this.IOCore.memory.memoryWriteFast8(destination >>> 0, output | 0);
+        destination = ((destination | 0) + (wordSize | 0)) | 0;
+        this.IOCore.memory.memoryWriteFast8(destination | 0, output | 0);
     }
 }
 GameBoyAdvanceSWI.prototype.Diff8bitUnFilterVram = function () {
     var source = this.CPUCore.registers[0] & -4;
     var destination = this.CPUCore.registers[1] | 0;
-    var descriptor = this.IOCore.memory.memoryRead32(source >>> 0) | 0;
-    var output = this.IOCore.memory.memoryReadFast8(destination >>> 0) | 0;
+    var descriptor = this.IOCore.memory.memoryRead32(source | 0) | 0;
+    var output = this.IOCore.memory.memoryReadFast8(destination | 0) | 0;
     var wordSize = descriptor & 0x3;
     for (var size = descriptor >>> 8; (size | 0) > 0; size = ((size | 0) - (wordSize | 0)) | 0) {
-        source = ((source >>> 0) + (wordSize >>> 0)) >>> 0;
-        var data = this.IOCore.memory.memoryReadFast8(source >>> 0) | 0;
+        source = ((source | 0) + (wordSize | 0)) | 0;
+        var data = this.IOCore.memory.memoryReadFast8(source | 0) | 0;
         output = ((data & 0xFF) + (output & 0xFF)) & 0xFF;
-        destination = ((destination >>> 0) + (wordSize >>> 0)) >>> 0;
+        destination = ((destination | 0) + (wordSize | 0)) | 0;
         var output2 = output | 0;
         output = ((data & 0xFF) + (output & 0xFF)) & 0xFF;
-        destination = ((destination >>> 0) + (wordSize >>> 0)) >>> 0;
+        destination = ((destination | 0) + (wordSize | 0)) | 0;
         output2 = output2 | (output << 8);
-        this.IOCore.memory.memoryWrite16(destination >>> 0, output2 | 0);
+        this.IOCore.memory.memoryWrite16(destination | 0, output2 | 0);
     }
 }
 GameBoyAdvanceSWI.prototype.Diff16bitUnFilter = function () {
     var source = this.CPUCore.registers[0] & -4;
     var destination = this.CPUCore.registers[1] | 0;
-    var descriptor = this.IOCore.memory.memoryRead32(source >>> 0) | 0;
-    var output = this.IOCore.memory.memoryReadFast16(destination >>> 0) | 0;
+    var descriptor = this.IOCore.memory.memoryRead32(source | 0) | 0;
+    var output = this.IOCore.memory.memoryReadFast16(destination | 0) | 0;
     var wordSize = descriptor & 0x3;
     for (var size = descriptor >>> 8; (size | 0) > 0; size = ((size | 0) - (wordSize | 0)) | 0) {
-        source = ((source >>> 0) + (wordSize >>> 0)) >>> 0;
-        var data = this.IOCore.memory.memoryReadFast16(source >>> 0) | 0;
+        source = ((source | 0) + (wordSize | 0)) | 0;
+        var data = this.IOCore.memory.memoryReadFast16(source | 0) | 0;
         output = ((data & 0xFFFF) + (output & 0xFFFF)) & 0xFFFF;
-        destination = ((destination >>> 0) + (wordSize >>> 0)) >>> 0;
-        this.IOCore.memory.memoryWrite16(destination >>> 0, output | 0);
+        destination = ((destination | 0) + (wordSize | 0)) | 0;
+        this.IOCore.memory.memoryWrite16(destination | 0, output | 0);
     }
 }
 GameBoyAdvanceSWI.prototype.SoundBias = function () {
@@ -575,7 +575,7 @@ GameBoyAdvanceSWI.prototype.SoundChannelClear = function () {
     
 }
 GameBoyAdvanceSWI.prototype.MidiKey2Freq = function () {
-    var frequency = this.CPUCore.memoryRead32((this.CPUCore.registers[0] + 4) >>> 0);
+    var frequency = this.CPUCore.memoryRead32((this.CPUCore.registers[0] + 4) | 0);
     var temp = (180 - this.CPUCore.registers[1]) - (this.CPUCore.registers[2] / 0x100);
     temp = Math.pow(2, temp / 12);
     this.CPUCore.registers[0] = (frequency / temp) | 0;

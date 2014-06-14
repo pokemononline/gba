@@ -70,17 +70,9 @@ GameBoyAdvanceGraphics.prototype.initializeIO = function () {
     this.paletteRAM = getUint8Array(0x400);
     this.VRAM = getUint8Array(0x18000);
     this.VRAM16 = getUint16View(this.VRAM);
-    this.readVRAM16 = (this.VRAM16) ? this.readVRAM16Optimized : this.readVRAM16Slow;
-    this.writeVRAM16 = (this.VRAM16) ? this.writeVRAM16Optimized : this.writeVRAM16Slow;
     this.VRAM32 = getInt32View(this.VRAM);
-    this.readVRAM32 = (this.VRAM32) ? this.readVRAM32Optimized : this.readVRAM32Slow;
-    this.writeVRAM32 = (this.VRAM32) ? this.writeVRAM32Optimized : this.writeVRAM32Slow;
     this.paletteRAM16 = getUint16View(this.paletteRAM);
-    this.readPalette16 = (this.paletteRAM16) ? this.readPalette16Optimized : this.readPalette16Slow;
-    this.writePalette16 = (this.paletteRAM16) ? this.writePalette16Optimized : this.writePalette16Slow;
     this.paletteRAM32 = getInt32View(this.paletteRAM);
-    this.readPalette32 = (this.paletteRAM32) ? this.readPalette32Optimized : this.readPalette32Slow;
-    this.writePalette32 = (this.paletteRAM32) ? this.writePalette32Optimized : this.writePalette32Slow;
     this.lineBuffer = getInt32Array(240);
     this.frameBuffer = this.coreExposed.frameBuffer;
     this.LCDTicks = 0;
@@ -406,8 +398,13 @@ GameBoyAdvanceGraphics.prototype.copyLineToFrameBuffer = function (line) {
     }
     else {
         if (!this.greenSwap) {
-            for (; (position | 0) < 240; offsetStart = ((offsetStart | 0) + 1) | 0, position = ((position | 0) + 1) | 0) {
-                this.frameBuffer[offsetStart | 0] = this.lineBuffer[position | 0] | 0;
+            if (!!this.frameBuffer.set) {
+                this.frameBuffer.set(this.lineBuffer, offsetStart | 0);
+            }
+            else {
+                for (; (position | 0) < 240; offsetStart = ((offsetStart | 0) + 1) | 0, position = ((position | 0) + 1) | 0) {
+                    this.frameBuffer[offsetStart | 0] = this.lineBuffer[position | 0] | 0;
+                }
             }
         }
         else {
@@ -1037,44 +1034,107 @@ GameBoyAdvanceGraphics.prototype.writeBLDY = function (data) {
     this.graphicsJIT();
     this.colorEffectsRenderer.writeBLDY(data | 0);
 }
-GameBoyAdvanceGraphics.prototype.writeVRAM16Slow = function (address, data) {
-    this.graphicsJIT();
-    this.VRAM[address] = data & 0xFF;
-    this.VRAM[address | 1] = data >> 8;
+if (__LITTLE_ENDIAN__) {
+    GameBoyAdvanceGraphics.prototype.writeVRAM16 = function (address, data) {
+        address = address | 0;
+        data = data | 0;
+        this.graphicsJIT();
+        this.VRAM16[address >> 1] = data | 0;
+    }
+    GameBoyAdvanceGraphics.prototype.writeVRAM32 = function (address, data) {
+        address = address | 0;
+        data = data | 0;
+        this.graphicsJIT();
+        this.VRAM32[address >> 2] = data | 0;
+    }
+    GameBoyAdvanceGraphics.prototype.readVRAM16 = function (address) {
+        return this.VRAM16[address >> 1] | 0;
+    }
+    GameBoyAdvanceGraphics.prototype.readVRAM32 = function (address) {
+        return this.VRAM32[address >> 2] | 0;
+    }
+    GameBoyAdvanceGraphics.prototype.writePalette16 = function (address, data) {
+        data = data | 0;
+        address = address >> 1;
+        this.graphicsJIT();
+        this.paletteRAM16[address & 0x1FF] = data | 0;
+        data = data & 0x7FFF;
+        this.writePalette256Color(address | 0, data | 0);
+        this.writePalette16Color(address | 0, data | 0);
+    }
+    GameBoyAdvanceGraphics.prototype.writePalette32 = function (address, data) {
+        data = data | 0;
+        address = address >> 1;
+        this.graphicsJIT();
+        this.paletteRAM32[(address >> 1) & 0xFF] = data | 0;
+        var palette = data & 0x7FFF;
+        this.writePalette256Color(address | 0, palette | 0);
+        this.writePalette16Color(address | 0, palette | 0);
+        palette = (data >> 16) & 0x7FFF;
+        this.writePalette256Color(address | 1, palette | 0);
+        this.writePalette16Color(address | 1, palette | 0);
+    }
+    GameBoyAdvanceGraphics.prototype.readPalette16 = function (address) {
+        address = address | 0;
+        return this.paletteRAM16[(address >> 1) & 0x1FF] | 0;
+    }
+    GameBoyAdvanceGraphics.prototype.readPalette32 = function (address) {
+        address = address | 0;
+        return this.paletteRAM32[(address >> 2) & 0xFF] | 0;
+    }
 }
-GameBoyAdvanceGraphics.prototype.writeVRAM16Optimized = function (address, data) {
-    address = address | 0;
-    data = data | 0;
-    this.graphicsJIT();
-    this.VRAM16[address >> 1] = data | 0;
-}
-GameBoyAdvanceGraphics.prototype.writeVRAM32Slow = function (address, data) {
-    this.graphicsJIT();
-    this.VRAM[address | 0] = data & 0xFF;
-    this.VRAM[address | 1] = (data >> 8) & 0xFF;
-    this.VRAM[address | 2] = (data >> 16) & 0xFF;
-    this.VRAM[address | 3] = (data >> 24) & 0xFF;
-}
-GameBoyAdvanceGraphics.prototype.writeVRAM32Optimized = function (address, data) {
-    address = address | 0;
-    data = data | 0;
-    this.graphicsJIT();
-    this.VRAM32[address >> 2] = data | 0;
+else {
+    GameBoyAdvanceGraphics.prototype.writeVRAM16 = function (address, data) {
+        this.graphicsJIT();
+        this.VRAM[address] = data & 0xFF;
+        this.VRAM[address | 1] = data >> 8;
+    }
+    GameBoyAdvanceGraphics.prototype.writeVRAM32 = function (address, data) {
+        this.graphicsJIT();
+        this.VRAM[address | 0] = data & 0xFF;
+        this.VRAM[address | 1] = (data >> 8) & 0xFF;
+        this.VRAM[address | 2] = (data >> 16) & 0xFF;
+        this.VRAM[address | 3] = data >>> 24;
+    }
+    GameBoyAdvanceGraphics.prototype.readVRAM16 = function (address) {
+        return this.VRAM[address | 0] | (this.VRAM[address | 1] << 8);
+    }
+    GameBoyAdvanceGraphics.prototype.readVRAM32 = function (address) {
+        return this.VRAM[address | 0] | (this.VRAM[address | 1] << 8) | (this.VRAM[address | 2] << 16) | (this.VRAM[address | 3] << 24);
+    }
+    GameBoyAdvanceGraphics.prototype.writePalette16 = function (address, data) {
+        this.graphicsJIT();
+        this.paletteRAM[address] = data & 0xFF;
+        this.paletteRAM[address | 1] = data >> 8;
+        data &= 0x7FFF;
+        address >>= 1;
+        this.writePalette256Color(address, data);
+        this.writePalette16Color(address, data);
+    }
+    GameBoyAdvanceGraphics.prototype.writePalette32 = function (address, data) {
+        this.graphicsJIT();
+        this.paletteRAM[address] = data & 0xFF;
+        this.paletteRAM[address | 1] = (data >> 8) & 0xFF;
+        this.paletteRAM[address | 2] = (data >> 16) & 0xFF;
+        this.paletteRAM[address | 3] = data >>> 24;
+        address >>= 1;
+        var palette = data & 0x7FFF;
+        this.writePalette256Color(address, palette);
+        this.writePalette16Color(address, palette);
+        palette = (data >> 16) & 0x7FFF;
+        address |= 1;
+        this.writePalette256Color(address, palette);
+        this.writePalette16Color(address, palette);
+    }
+    GameBoyAdvanceGraphics.prototype.readPalette16 = function (address) {
+        return this.paletteRAM[address] | (this.paletteRAM[address | 1] << 8);
+    }
+    GameBoyAdvanceGraphics.prototype.readPalette32 = function (address) {
+        return this.paletteRAM[address] | (this.paletteRAM[address | 1] << 8) | (this.paletteRAM[address | 2] << 16)  | (this.paletteRAM[address | 3] << 24);
+    }
 }
 GameBoyAdvanceGraphics.prototype.readVRAM = function (address) {
     return this.VRAM[address | 0] | 0;
-}
-GameBoyAdvanceGraphics.prototype.readVRAM16Slow = function (address) {
-    return this.VRAM[address | 0] | (this.VRAM[address | 1] << 8);
-}
-GameBoyAdvanceGraphics.prototype.readVRAM16Optimized = function (address) {
-    return this.VRAM16[address >> 1] | 0;
-}
-GameBoyAdvanceGraphics.prototype.readVRAM32Slow = function (address) {
-    return this.VRAM[address | 0] | (this.VRAM[address | 1] << 8) | (this.VRAM[address | 2] << 16) | (this.VRAM[address | 3] << 24);
-}
-GameBoyAdvanceGraphics.prototype.readVRAM32Optimized = function (address) {
-    return this.VRAM32[address >> 2] | 0;
 }
 GameBoyAdvanceGraphics.prototype.writeOAM16 = function (address, data) {
     address = address | 0;
@@ -1083,11 +1143,10 @@ GameBoyAdvanceGraphics.prototype.writeOAM16 = function (address, data) {
     this.objRenderer.writeOAM16(address >> 1, data | 0);
 }
 GameBoyAdvanceGraphics.prototype.writeOAM32 = function (address, data) {
-    address = address >> 1;
+    address = address | 0;
     data = data | 0;
     this.graphicsJIT();
-    this.objRenderer.writeOAM16(address | 0, data & 0xFFFF);
-    this.objRenderer.writeOAM16(address | 1, (data >> 16) & 0xFFFF);
+    this.objRenderer.writeOAM32(address >> 2, data | 0);
 }
 GameBoyAdvanceGraphics.prototype.readOAM = function (address) {
     return this.objRenderer.readOAM(address | 0) | 0;
@@ -1097,51 +1156,6 @@ GameBoyAdvanceGraphics.prototype.readOAM16 = function (address) {
 }
 GameBoyAdvanceGraphics.prototype.readOAM32 = function (address) {
     return this.objRenderer.readOAM32(address | 0) | 0;
-}
-GameBoyAdvanceGraphics.prototype.writePalette16Slow = function (address, data) {
-    this.graphicsJIT();
-    this.paletteRAM[address] = data & 0xFF;
-    this.paletteRAM[address | 1] = data >> 8;
-    data &= 0x7FFF;
-    address >>= 1;
-    this.writePalette256Color(address, data);
-    this.writePalette16Color(address, data);
-}
-GameBoyAdvanceGraphics.prototype.writePalette16Optimized = function (address, data) {
-    data = data | 0;
-    address = address >> 1;
-    this.graphicsJIT();
-    this.paletteRAM16[address & 0x1FF] = data | 0;
-    data = data & 0x7FFF;
-    this.writePalette256Color(address | 0, data | 0);
-    this.writePalette16Color(address | 0, data | 0);
-}
-GameBoyAdvanceGraphics.prototype.writePalette32Slow = function (address, data) {
-    this.graphicsJIT();
-    this.paletteRAM[address] = data & 0xFF;
-    this.paletteRAM[address | 1] = (data >> 8) & 0xFF;
-    this.paletteRAM[address | 2] = (data >> 16) & 0xFF;
-    this.paletteRAM[address | 3] = (data >> 24) & 0xFF;
-    address >>= 1;
-    var palette = data & 0x7FFF;
-    this.writePalette256Color(address, palette);
-    this.writePalette16Color(address, palette);
-    palette = (data >> 16) & 0x7FFF;
-    address |= 1;
-    this.writePalette256Color(address, palette);
-    this.writePalette16Color(address, palette);
-}
-GameBoyAdvanceGraphics.prototype.writePalette32Optimized = function (address, data) {
-    data = data | 0;
-    address = address >> 1;
-    this.graphicsJIT();
-    this.paletteRAM32[(address >> 1) & 0xFF] = data | 0;
-    var palette = data & 0x7FFF;
-    this.writePalette256Color(address | 0, palette | 0);
-    this.writePalette16Color(address | 0, palette | 0);
-    palette = (data >> 16) & 0x7FFF;
-    this.writePalette256Color(address | 1, palette | 0);
-    this.writePalette16Color(address | 1, palette | 0);
 }
 GameBoyAdvanceGraphics.prototype.writePalette256Color = function (address, palette) {
     address = address | 0;
@@ -1174,18 +1188,4 @@ GameBoyAdvanceGraphics.prototype.writePalette16Color = function (address, palett
 }
 GameBoyAdvanceGraphics.prototype.readPalette = function (address) {
     return this.paletteRAM[address & 0x3FF] | 0;
-}
-GameBoyAdvanceGraphics.prototype.readPalette16Slow = function (address) {
-    return this.paletteRAM[address] | (this.paletteRAM[address | 1] << 8);
-}
-GameBoyAdvanceGraphics.prototype.readPalette16Optimized = function (address) {
-    address = address | 0;
-    return this.paletteRAM16[(address >> 1) & 0x1FF] | 0;
-}
-GameBoyAdvanceGraphics.prototype.readPalette32Slow = function (address) {
-    return this.paletteRAM[address] | (this.paletteRAM[address | 1] << 8) | (this.paletteRAM[address | 2] << 16)  | (this.paletteRAM[address | 3] << 24);
-}
-GameBoyAdvanceGraphics.prototype.readPalette32Optimized = function (address) {
-    address = address | 0;
-    return this.paletteRAM32[(address >> 2) & 0xFF] | 0;
 }

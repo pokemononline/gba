@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,356 +17,6 @@
  */
 function GameBoyAdvanceMemoryDispatchGenerator(memory) {
     this.memory = memory;
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryRead8 = function () {
-    return this.compileMemoryReadDispatch([
-                                               this.memory.readUnused8,
-                                               this.memory.readExternalWRAM8,
-                                               this.memory.readInternalWRAM8,
-                                               this.memory.readIODispatch8,
-                                               this.memory.readPalette8,
-                                               this.memory.readVRAM8,
-                                               this.memory.readOAM8,
-                                               this.memory.readROM08,
-                                               this.memory.readROM18,
-                                               this.memory.readROM28,
-                                               this.memory.readSRAM8,
-                                               (this.memory.IOCore.BIOSFound) ? this.memory.readBIOS8 : this.memory.readUnused8
-                                               ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWrite8 = function () {
-    return this.compileMemoryWriteDispatch([
-                                            this.memory.writeUnused8,
-                                            this.memory.writeExternalWRAM8,
-                                            this.memory.writeInternalWRAM8,
-                                            this.memory.writeIODispatch8,
-                                            this.memory.writePalette8,
-                                            this.memory.writeVRAM8,
-                                            this.memory.writeOAM8,
-                                            this.memory.writeROM08,
-                                            this.memory.writeROM18,
-                                            this.memory.writeROM28,
-                                            this.memory.writeSRAM8
-                                            ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryRead16 = function () {
-    return this.compileMemoryReadDispatch([
-                                       this.memory.readUnused16,
-                                       (this.memory.externalRAM16) ? this.memory.readExternalWRAM16Optimized : this.memory.readExternalWRAM16Slow,
-                                       (this.memory.internalRAM16) ? this.memory.readInternalWRAM16Optimized : this.memory.readInternalWRAM16Slow,
-                                       this.memory.readIODispatch16,
-                                       this.memory.readPalette16,
-                                       this.memory.readVRAM16,
-                                       this.memory.readOAM16,
-                                       this.memory.readROM016,
-                                       this.memory.readROM116,
-                                       this.memory.readROM216,
-                                       this.memory.readSRAM16,
-                                       (this.memory.IOCore.BIOSFound) ? ((this.memory.BIOS16) ? this.memory.readBIOS16Optimized : this.memory.readBIOS16Slow) : this.memory.readUnused16
-                                       ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWrite16 = function () {
-    return this.compileMemoryWriteDispatch([
-                                       this.memory.writeUnused16,
-                                       (this.memory.externalRAM16) ? this.memory.writeExternalWRAM16Optimized : this.memory.writeExternalWRAM16Slow,
-                                       (this.memory.internalRAM16) ? this.memory.writeInternalWRAM16Optimized : this.memory.writeInternalWRAM16Slow,
-                                       this.memory.writeIODispatch16,
-                                       this.memory.writePalette16,
-                                       this.memory.writeVRAM16,
-                                       this.memory.writeOAM16,
-                                       this.memory.writeROM016,
-                                       this.memory.writeROM116,
-                                       this.memory.writeROM216,
-                                       this.memory.writeSRAM16
-                                       ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryRead32 = function () {
-    return this.compileMemoryReadDispatch([
-                                           this.memory.readUnused32,
-                                           (this.memory.externalRAM32) ? this.memory.readExternalWRAM32Optimized : this.memory.readExternalWRAM32Slow,
-                                           (this.memory.internalRAM32) ? this.memory.readInternalWRAM32Optimized : this.memory.readInternalWRAM32Slow,
-                                           this.memory.readIODispatch32,
-                                           this.memory.readPalette32,
-                                           this.memory.readVRAM32,
-                                           this.memory.readOAM32,
-                                           this.memory.readROM032,
-                                           this.memory.readROM132,
-                                           this.memory.readROM232,
-                                           this.memory.readSRAM32,
-                                           (this.memory.IOCore.BIOSFound) ? ((this.memory.BIOS32) ? this.memory.readBIOS32Optimized : this.memory.readBIOS32Slow) : this.memory.readUnused32
-                                           ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWrite32 = function () {
-    return this.compileMemoryWriteDispatch([
-                                            this.memory.writeUnused32,
-                                            (this.memory.externalRAM32) ? this.memory.writeExternalWRAM32Optimized : this.memory.writeExternalWRAM32Slow,
-                                            (this.memory.internalRAM32) ? this.memory.writeInternalWRAM32Optimized : this.memory.writeInternalWRAM32Slow,
-                                            this.memory.writeIODispatch32,
-                                            this.memory.writePalette32,
-                                            this.memory.writeVRAM32,
-                                            this.memory.writeOAM32,
-                                            this.memory.writeROM032,
-                                            this.memory.writeROM132,
-                                            this.memory.writeROM232,
-                                            this.memory.writeSRAM32
-                                            ]);
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.compileMemoryReadDispatch = function (readCalls) {
-    var readUnused = readCalls[0];
-    var readExternalWRAM = readCalls[1];
-    var readInternalWRAM = readCalls[2];
-    var readIODispatch = readCalls[3];
-    var readPalette = readCalls[4];
-    var readVRAM = readCalls[5];
-    var readOAM = readCalls[6];
-    var readROM0 = readCalls[7];
-    var readROM1 = readCalls[8];
-    var readROM2 = readCalls[9];
-    var readSRAM = readCalls[10];
-    var readBIOS = readCalls[11];
-    /*
-     Decoder for the nibble at bits 24-27
-     (Top 4 bits of the address is not used,
-     so the next nibble down is used for dispatch.):
-     */
-    var memoryReader = [
-                        /*
-                         BIOS Area (00000000-00003FFF)
-                         Unused (00004000-01FFFFFF)
-                         */
-                        readBIOS,
-                        /*
-                         Unused (00004000-01FFFFFF)
-                         */
-                        readUnused,
-                        /*
-                         WRAM - On-board Work RAM (02000000-0203FFFF)
-                         Unused (02040000-02FFFFFF)
-                         */
-                        readExternalWRAM,
-                        /*
-                         WRAM - In-Chip Work RAM (03000000-03007FFF)
-                         Unused (03008000-03FFFFFF)
-                         */
-                        readInternalWRAM,
-                        /*
-                         I/O Registers (04000000-040003FE)
-                         Unused (04000400-04FFFFFF)
-                         */
-                        readIODispatch,
-                        /*
-                         BG/OBJ Palette RAM (05000000-050003FF)
-                         Unused (05000400-05FFFFFF)
-                         */
-                        readPalette,
-                        /*
-                         VRAM - Video RAM (06000000-06017FFF)
-                         Unused (06018000-06FFFFFF)
-                         */
-                        readVRAM,
-                        /*
-                         OAM - OBJ Attributes (07000000-070003FF)
-                         Unused (07000400-07FFFFFF)
-                         */
-                        readOAM,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 0 (08000000-08FFFFFF)
-                         */
-                        readROM0,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 0 (09000000-09FFFFFF)
-                         */
-                        readROM0,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 1 (0A000000-0AFFFFFF)
-                         */
-                        readROM1,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 1 (0B000000-0BFFFFFF)
-                         */
-                        readROM1,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 2 (0C000000-0CFFFFFF)
-                         */
-                        readROM2,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 2 (0D000000-0DFFFFFF)
-                         */
-                        readROM2,
-                        /*
-                         Game Pak SRAM  (max 64 KBytes) - 8bit Bus width (0E000000-0E00FFFF)
-                         */
-                        readSRAM,
-                        /*
-                         Unused (0E010000-FFFFFFFF)
-                         */
-                        readSRAM,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused,
-                        readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused, readUnused
-                        ];
-    try {
-        Object.defineProperty(memoryReader, "length", {writable: false});
-    }
-    catch (error) {
-        //Some browsers throw here....
-    }
-    return memoryReader;
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.compileMemoryWriteDispatch = function (writeCalls) {
-    var writeUnused = writeCalls[0];
-    var writeExternalWRAM = writeCalls[1];
-    var writeInternalWRAM = writeCalls[2];
-    var writeIODispatch = writeCalls[3];
-    var writePalette = writeCalls[4];
-    var writeVRAM = writeCalls[5];
-    var writeOAM = writeCalls[6];
-    var writeROM0 = writeCalls[7];
-    var writeROM1 = writeCalls[8];
-    var writeROM2 = writeCalls[9];
-    var writeSRAM = writeCalls[10];
-    /*
-     Decoder for the nibble at bits 24-27
-     (Top 4 bits of the address is not used,
-     so the next nibble down is used for dispatch.):
-     */
-    var memoryWriter = [
-                        /*
-                         BIOS Area (00000000-00003FFF)
-                         Unused (00004000-01FFFFFF)
-                         */
-                        writeUnused,
-                        /*
-                         Unused (00004000-01FFFFFF)
-                         */
-                        writeUnused,
-                        /*
-                         WRAM - On-board Work RAM (02000000-0203FFFF)
-                         Unused (02040000-02FFFFFF)
-                         */
-                        writeExternalWRAM,
-                        /*
-                         WRAM - In-Chip Work RAM (03000000-03007FFF)
-                         Unused (03008000-03FFFFFF)
-                         */
-                        writeInternalWRAM,
-                        /*
-                         I/O Registers (04000000-040003FE)
-                         Unused (04000400-04FFFFFF)
-                         */
-                        writeIODispatch,
-                        /*
-                         BG/OBJ Palette RAM (05000000-050003FF)
-                         Unused (05000400-05FFFFFF)
-                         */
-                        writePalette,
-                        /*
-                         VRAM - Video RAM (06000000-06017FFF)
-                         Unused (06018000-06FFFFFF)
-                         */
-                        writeVRAM,
-                        /*
-                         OAM - OBJ Attributes (07000000-070003FF)
-                         Unused (07000400-07FFFFFF)
-                         */
-                        writeOAM,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 0 (08000000-08FFFFFF)
-                         */
-                        writeROM0,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 0 (09000000-09FFFFFF)
-                         */
-                        writeROM0,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 1 (0A000000-0AFFFFFF)
-                         */
-                        writeROM1,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 1 (0B000000-0BFFFFFF)
-                         */
-                        writeROM1,
-                        /*
-                         Game Pak ROM (max 16MB) - Wait State 2 (0C000000-0CFFFFFF)
-                         */
-                        writeROM2,
-                        /*
-                         Game Pak ROM/FlashROM (max 16MB) - Wait State 2 (0D000000-0DFFFFFF)
-                         */
-                        writeROM2,
-                        /*
-                         Game Pak SRAM  (max 64 KBytes) - 8bit Bus width (0E000000-0E00FFFF)
-                         */
-                        writeSRAM,
-                        /*
-                         Unused (0E010000-FFFFFFFF)
-                         */
-                        writeSRAM,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused,
-                        writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused, writeUnused
-                        ];
-    try {
-        Object.defineProperty(memoryWriter, "length", {writable: false});
-    }
-    catch (error) {
-        //Some browsers throw here....
-    }
-    return memoryWriter;
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO8 = function () {
     var readIO = [];
@@ -452,13 +102,13 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO8 = function
         return parentObj.gfx.readWINOUT1() | 0;
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C] = this.encapsulateUnusedIORead(this.memory.readUnused0, 0x4C);
+    readIO[0x4C] = this.memory.readUnused0;
     //400004Dh - MOSAIC - Mosaic Size (W)
-    readIO[0x4D] = this.encapsulateUnusedIORead(this.memory.readUnused1, 0x4D);
+    readIO[0x4D] = this.memory.readUnused1;
     //400004Eh - NOT USED - ZERO
-    readIO[0x4E] = this.encapsulateUnusedIORead(this.memory.readUnused2, 0x4E);
+    readIO[0x4E] = this.memory.readUnused2;
     //400004Fh - NOT USED - ZERO
-    readIO[0x4F] = this.encapsulateUnusedIORead(this.memory.readUnused3, 0x4F);
+    readIO[0x4F] = this.memory.readUnused3;
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     readIO[0x50] = function (parentObj) {
         return parentObj.gfx.readBLDCNT0() | 0;
@@ -622,13 +272,13 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO8 = function
     //400008Bh - NOT USED - ZERO
     readIO[0x8B] = this.memory.readZero;
     //400008Ch - NOT USED - GLITCHED
-    readIO[0x8C] = this.encapsulateUnusedIORead(this.memory.readUnused0, 0x8C);
+    readIO[0x8C] = this.memory.readUnused0;
     //400008Dh - NOT USED - GLITCHED
-    readIO[0x8D] = this.encapsulateUnusedIORead(this.memory.readUnused1, 0x8D);
+    readIO[0x8D] = this.memory.readUnused1;
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8E] = this.encapsulateUnusedIORead(this.memory.readUnused2, 0x8E);
+    readIO[0x8E] = this.memory.readUnused2;
     //400008Fh - NOT USED - GLITCHED
-    readIO[0x8F] = this.encapsulateUnusedIORead(this.memory.readUnused3, 0x8F);
+    readIO[0x8F] = this.memory.readUnused3;
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90] = function (parentObj) {
         parentObj.IOCore.updateTimerClocking();
@@ -1078,9 +728,9 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO16 = functio
         return parentObj.gfx.readWINOUT0() | (parentObj.gfx.readWINOUT1() << 8);
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x4C >> 1);
+    readIO[0x4C >> 1] = this.memory.readUnused16IO1;
     //400004Eh - NOT USED - ZERO
-    readIO[0x4E >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x4E >> 1);
+    readIO[0x4E >> 1] = this.memory.readUnused16IO2;
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     readIO[0x50 >> 1] = function (parentObj) {
         return parentObj.gfx.readBLDCNT0() | (parentObj.gfx.readBLDCNT1() << 8);
@@ -1180,9 +830,9 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO16 = functio
     //400008Ah - NOT USED - ZERO
     readIO[0x8A >> 1] = this.memory.readZero;
     //400008Ch - NOT USED - GLITCHED
-    readIO[0x8C >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x8C >> 1);
+    readIO[0x8C >> 1] = this.memory.readUnused16IO1;
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8E >> 1] = this.encapsulateUnusedIORead(this.memory.readUnused16, 0x8E >> 1);
+    readIO[0x8E >> 1] = this.memory.readUnused16IO2;
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90 >> 1] = function (parentObj) {
         parentObj.IOCore.updateTimerClocking();
@@ -1449,7 +1099,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
         (parentObj.gfx.readWINOUT1() << 24);
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
-    readIO[0x4C >> 2] = this.encapsulateUnusedIORead(this.memory.readUnused32, 0x4C >> 2);
+    readIO[0x4C >> 2] = this.memory.readUnused32IO;
     //4000050h - BLDCNT - Color Special Effects Selection (R/W)
     //4000052h - BLDALPHA - Alpha Blending Coefficients (R/W)
     readIO[0x50 >> 2] = function (parentObj) {
@@ -1538,7 +1188,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
     }
     //400008Ch - NOT USED - GLITCHED
     //400008Eh - NOT USED - GLITCHED
-    readIO[0x8C >> 2] = this.encapsulateUnusedIORead(this.memory.readUnused32, 0x8C >> 2);
+    readIO[0x8C >> 2] = this.memory.readUnused32IO;
     //4000090h - WAVE_RAM0_L - Channel 3 Wave Pattern RAM (W/R)
     //4000092h - WAVE_RAM0_H - Channel 3 Wave Pattern RAM (W/R)
     readIO[0x90 >> 2] = function (parentObj) {
@@ -1745,28 +1395,27 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryReadIO32 = functio
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused8 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused0, from);
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused1, from);
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused2, from);
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused3, from);
+        readIO[from++] = this.memory.readUnused0;
+        readIO[from++] = this.memory.readUnused1;
+        readIO[from++] = this.memory.readUnused2;
+        readIO[from++] = this.memory.readUnused3;
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused16 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused16, from);
+        if ((from & 0x1) == 0) {
+            readIO[from++] = this.memory.readUnused16IO1;
+        }
+        else {
+            readIO[from++] = this.memory.readUnused16IO2;
+        }
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.fillReadTableUnused32 = function (readIO, from, to) {
     //Fill in slots of the i/o read table:
     while (from <= to) {
-        readIO[from++] = this.encapsulateUnusedIORead(this.memory.readUnused32, from);
-    }
-}
-GameBoyAdvanceMemoryDispatchGenerator.prototype.encapsulateUnusedIORead = function (unusedFunc, address) {
-    address = address | 0x4000000;
-    return function (parentObj) {
-        return unusedFunc(parentObj, address | 0) | 0;
+        readIO[from++] = this.memory.readUnused32IO;
     }
 }
 GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO8 = function () {
@@ -3908,7 +3557,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG0CNT0(data & 0xFF);
         parentObj.gfx.writeBG0CNT1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG1CNT0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG1CNT1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG1CNT1(data >>> 24);
     }
     //400000Ch - BG2CNT - BG2 Control (R/W) (BG Modes 0,1,2 only)
     //400000Eh - BG3CNT - BG3 Control (R/W) (BG Modes 0,2 only)
@@ -3918,7 +3567,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2CNT0(data & 0xFF);
         parentObj.gfx.writeBG2CNT1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3CNT0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3CNT1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3CNT1(data >>> 24);
     }
     //4000010h - BG0HOFS - BG0 X-Offset (W)
     //4000012h - BG0VOFS - BG0 Y-Offset (W)
@@ -3928,7 +3577,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG0HOFS0(data & 0xFF);
         parentObj.gfx.writeBG0HOFS1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG0VOFS0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG0VOFS1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG0VOFS1(data >>> 24);
     }
     //4000014h - BG1HOFS - BG1 X-Offset (W)
     //4000016h - BG1VOFS - BG1 Y-Offset (W)
@@ -3938,7 +3587,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG1HOFS0(data & 0xFF);
         parentObj.gfx.writeBG1HOFS1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG1VOFS0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG1VOFS1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG1VOFS1(data >>> 24);
     }
     //4000018h - BG2HOFS - BG2 X-Offset (W)
     //400001Ah - BG2VOFS - BG2 Y-Offset (W)
@@ -3948,7 +3597,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2HOFS0(data & 0xFF);
         parentObj.gfx.writeBG2HOFS1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG2VOFS0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG2VOFS1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG2VOFS1(data >>> 24);
     }
     //400001Ch - BG3HOFS - BG3 X-Offset (W)
     //400001Eh - BG3VOFS - BG3 Y-Offset (W)
@@ -3958,7 +3607,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG3HOFS0(data & 0xFF);
         parentObj.gfx.writeBG3HOFS1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3VOFS0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3VOFS1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3VOFS1(data >>> 24);
     }
     //4000020h - BG2PA - BG2 Rotation/Scaling Parameter A (alias dx) (W)
     //4000022h - BG2PB - BG2 Rotation/Scaling Parameter B (alias dmx) (W)
@@ -3968,7 +3617,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2PA0(data & 0xFF);
         parentObj.gfx.writeBG2PA1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG2PB0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG2PB1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG2PB1(data >>> 24);
     }
     //4000024h - BG2PC - BG2 Rotation/Scaling Parameter C (alias dy) (W)
     //4000026h - BG2PD - BG2 Rotation/Scaling Parameter D (alias dmy) (W)
@@ -3978,7 +3627,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2PC0(data & 0xFF);
         parentObj.gfx.writeBG2PC1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG2PD0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG2PD1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG2PD1(data >>> 24);
     }
     //4000028h - BG2X_L - BG2 Reference Point X-Coordinate, lower 16 bit (W)
     //400002Ah - BG2X_H - BG2 Reference Point X-Coordinate, upper 12 bit (W)
@@ -3988,7 +3637,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2X_L0(data & 0xFF);
         parentObj.gfx.writeBG2X_L1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG2X_H0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG2X_H1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG2X_H1(data >>> 24);
     }
     //400002Ch - BG2Y_L - BG2 Reference Point Y-Coordinate, lower 16 bit (W)
     //400002Eh - BG2Y_H - BG2 Reference Point Y-Coordinate, upper 12 bit (W)
@@ -3998,7 +3647,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG2Y_L0(data & 0xFF);
         parentObj.gfx.writeBG2Y_L1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG2Y_H0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG2Y_H1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG2Y_H1(data >>> 24);
     }
     //4000030h - BG3PA - BG3 Rotation/Scaling Parameter A (alias dx) (W)
     //4000032h - BG3PB - BG3 Rotation/Scaling Parameter B (alias dmx) (W)
@@ -4008,7 +3657,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG3PA0(data & 0xFF);
         parentObj.gfx.writeBG3PA1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3PB0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3PB1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3PB1(data >>> 24);
     }
     //4000034h - BG3PC - BG3 Rotation/Scaling Parameter C (alias dy) (W)
     //4000036h - BG3PD - BG3 Rotation/Scaling Parameter D (alias dmy) (W)
@@ -4018,7 +3667,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG3PC0(data & 0xFF);
         parentObj.gfx.writeBG3PC1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3PD0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3PD1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3PD1(data >>> 24);
     }
     //4000038h - BG3X_L - BG3 Reference Point X-Coordinate, lower 16 bit (W)
     //400003Ah - BG3X_H - BG3 Reference Point X-Coordinate, upper 12 bit (W)
@@ -4028,7 +3677,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG3X_L0(data & 0xFF);
         parentObj.gfx.writeBG3X_L1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3X_H0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3X_H1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3X_H1(data >>> 24);
     }
     //400003Ch - BG3Y_L - BG3 Reference Point Y-Coordinate, lower 16 bit (W)
     //400003Eh - BG3Y_H - BG3 Reference Point Y-Coordinate, upper 12 bit (W)
@@ -4038,7 +3687,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBG3Y_L0(data & 0xFF);
         parentObj.gfx.writeBG3Y_L1((data >> 8) & 0xFF);
         parentObj.gfx.writeBG3Y_H0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBG3Y_H1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBG3Y_H1(data >>> 24);
     }
     //4000040h - WIN0H - Window 0 Horizontal Dimensions (W)
     //4000042h - WIN1H - Window 1 Horizontal Dimensions (W)
@@ -4048,7 +3697,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeWIN0H0(data & 0xFF);
         parentObj.gfx.writeWIN0H1((data >> 8) & 0xFF);
         parentObj.gfx.writeWIN1H0((data >> 16) & 0xFF);
-        parentObj.gfx.writeWIN1H1((data >> 24) & 0xFF);
+        parentObj.gfx.writeWIN1H1(data >>> 24);
     }
     //4000044h - WIN0V - Window 0 Vertical Dimensions (W)
     //4000046h - WIN1V - Window 1 Vertical Dimensions (W)
@@ -4058,7 +3707,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeWIN0V0(data & 0xFF);
         parentObj.gfx.writeWIN0V1((data >> 8) & 0xFF);
         parentObj.gfx.writeWIN1V0((data >> 16) & 0xFF);
-        parentObj.gfx.writeWIN1V1((data >> 24) & 0xFF);
+        parentObj.gfx.writeWIN1V1(data >>> 24);
     }
     //4000048h - WININ - Control of Inside of Window(s) (R/W)
     //400004Ah- WINOUT - Control of Outside of Windows & Inside of OBJ Window (R/W)
@@ -4068,7 +3717,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeWININ0(data & 0xFF);
         parentObj.gfx.writeWININ1((data >> 8) & 0xFF);
         parentObj.gfx.writeWINOUT0((data >> 16) & 0xFF);
-        parentObj.gfx.writeWINOUT1((data >> 24) & 0xFF);
+        parentObj.gfx.writeWINOUT1(data >>> 24);
     }
     //400004Ch - MOSAIC - Mosaic Size (W)
     //400004Eh - NOT USED - ZERO
@@ -4086,7 +3735,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.gfx.writeBLDCNT0(data & 0xFF);
         parentObj.gfx.writeBLDCNT1((data >> 8) & 0xFF);
         parentObj.gfx.writeBLDALPHA0((data >> 16) & 0xFF);
-        parentObj.gfx.writeBLDALPHA1((data >> 24) & 0xFF);
+        parentObj.gfx.writeBLDALPHA1(data >>> 24);
     }
     //4000054h - BLDY - Brightness (Fade-In/Out) Coefficient (W)
     writeIO[0x54 >> 2] = function (parentObj, data) {
@@ -4106,7 +3755,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         //NR11:
         parentObj.sound.writeSOUND1CNT_H0((data >> 16) & 0xFF);
         //NR12:
-        parentObj.sound.writeSOUND1CNT_H1((data >> 24) & 0xFF);
+        parentObj.sound.writeSOUND1CNT_H1(data >>> 24);
     }
     //4000064h - SOUND1CNT_X (NR13, NR14) - Channel 1 Frequency/Control (R/W)
     //4000066h - NOT USED - ZERO
@@ -4148,7 +3797,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         //NR31:
         parentObj.sound.writeSOUND3CNT_H0((data >> 16) & 0xFF);
         //NR32:
-        parentObj.sound.writeSOUND3CNT_H1((data >> 24) & 0xFF);
+        parentObj.sound.writeSOUND3CNT_H1(data >>> 24);
     }
     //4000074h - SOUND3CNT_X (NR33, NR34) - Channel 3 Frequency/Control (R/W)
     //4000076h - NOT USED - ZERO
@@ -4190,7 +3839,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         //NR51:
         parentObj.sound.writeSOUNDCNT_L1((data >> 8) & 0xFF);
         parentObj.sound.writeSOUNDCNT_H0((data >> 16) & 0xFF);
-        parentObj.sound.writeSOUNDCNT_H1((data >> 24) & 0xFF);
+        parentObj.sound.writeSOUNDCNT_H1(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000084h - SOUNDCNT_X (NR52) - Sound on/off (R/W)
@@ -4217,7 +3866,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeWAVE(0, data & 0xFF);
         parentObj.sound.writeWAVE(0x1, (data >> 8) & 0xFF);
         parentObj.sound.writeWAVE(0x2, (data >> 16) & 0xFF);
-        parentObj.sound.writeWAVE(0x3, (data >> 24) & 0xFF);
+        parentObj.sound.writeWAVE(0x3, data >>> 24);
     }
     //4000094h - WAVE_RAM1_L - Channel 3 Wave Pattern RAM (W/R)
     //4000096h - WAVE_RAM1_H - Channel 3 Wave Pattern RAM (W/R)
@@ -4227,7 +3876,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeWAVE(0x4, data & 0xFF);
         parentObj.sound.writeWAVE(0x5, (data >> 8) & 0xFF);
         parentObj.sound.writeWAVE(0x6, (data >> 16) & 0xFF);
-        parentObj.sound.writeWAVE(0x7, (data >> 24) & 0xFF);
+        parentObj.sound.writeWAVE(0x7, data >>> 24);
     }
     //4000098h - WAVE_RAM2_L - Channel 3 Wave Pattern RAM (W/R)
     //400009Ah - WAVE_RAM2_H - Channel 3 Wave Pattern RAM (W/R)
@@ -4237,7 +3886,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeWAVE(0x8, data & 0xFF);
         parentObj.sound.writeWAVE(0x9, (data >> 8) & 0xFF);
         parentObj.sound.writeWAVE(0xA, (data >> 16) & 0xFF);
-        parentObj.sound.writeWAVE(0xB, (data >> 24) & 0xFF);
+        parentObj.sound.writeWAVE(0xB, data >>> 24);
     }
     //400009Ch - WAVE_RAM3_L - Channel 3 Wave Pattern RAM (W/R)
     //400009Eh - WAVE_RAM3_H - Channel 3 Wave Pattern RAM (W/R)
@@ -4247,7 +3896,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeWAVE(0xC, data & 0xFF);
         parentObj.sound.writeWAVE(0xD, (data >> 8) & 0xFF);
         parentObj.sound.writeWAVE(0xE, (data >> 16) & 0xFF);
-        parentObj.sound.writeWAVE(0xF, (data >> 24) & 0xFF);
+        parentObj.sound.writeWAVE(0xF, data >>> 24);
     }
     //40000A0h - FIFO_A_L - FIFO Channel A First Word (W)
     //40000A2h - FIFO_A_H - FIFO Channel A Second Word (W)
@@ -4257,7 +3906,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeFIFOA(data & 0xFF);
         parentObj.sound.writeFIFOA((data >> 8) & 0xFF);
         parentObj.sound.writeFIFOA((data >> 16) & 0xFF);
-        parentObj.sound.writeFIFOA((data >> 24) & 0xFF);
+        parentObj.sound.writeFIFOA(data >>> 24);
     }
     //40000A4h - FIFO_B_L - FIFO Channel B First Word (W)
     //40000A6h - FIFO_B_H - FIFO Channel B Second Word (W)
@@ -4267,7 +3916,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.sound.writeFIFOB(data & 0xFF);
         parentObj.sound.writeFIFOB((data >> 8) & 0xFF);
         parentObj.sound.writeFIFOB((data >> 16) & 0xFF);
-        parentObj.sound.writeFIFOB((data >> 24) & 0xFF);
+        parentObj.sound.writeFIFOB(data >>> 24);
     }
     //40000A8h through 40000AFh - NOT USED - GLITCHED
     this.fillWriteTableNOP(writeIO, 0xA8 >> 2, 0xAC >> 2);
@@ -4297,7 +3946,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.dma.writeDMAWordCount1(0, (data >> 8) & 0x3F);
         parentObj.dma.writeDMAControl0(0, (data >> 16) & 0xFF);
         parentObj.IOCore.updateCoreClocking();
-        parentObj.dma.writeDMAControl1(0, (data >> 24) & 0xFF);
+        parentObj.dma.writeDMAControl1(0, data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //40000BCh - DMA1SAD - DMA 1 Source Address (W) (internal memory)
@@ -4326,7 +3975,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.dma.writeDMAWordCount1(1, (data >> 8) & 0x3F);
         parentObj.dma.writeDMAControl0(1, (data >> 16) & 0xFF);
         parentObj.IOCore.updateCoreClocking();
-        parentObj.dma.writeDMAControl1(1, (data >> 24) & 0xFF);
+        parentObj.dma.writeDMAControl1(1, data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //40000C8h - DMA2SAD - DMA 2 Source Address (W) (internal memory)
@@ -4355,7 +4004,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.dma.writeDMAWordCount1(2, (data >> 8) & 0x3F);
         parentObj.dma.writeDMAControl0(2, (data >> 16) & 0xFF);
         parentObj.IOCore.updateCoreClocking();
-        parentObj.dma.writeDMAControl1(2, (data >> 24) & 0xFF);
+        parentObj.dma.writeDMAControl1(2, data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //40000D4h - DMA3SAD - DMA 3 Source Address (W) (internal memory)
@@ -4384,7 +4033,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.dma.writeDMAWordCount1(3, (data >> 8) & 0xFF);
         parentObj.dma.writeDMAControl0(3, (data >> 16) & 0xFF);
         parentObj.IOCore.updateCoreClocking();
-        parentObj.dma.writeDMAControl1(3, (data >> 24) & 0xFF);
+        parentObj.dma.writeDMAControl1(3, data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //40000E0h through 40000FFh - NOT USED - GLITCHED
@@ -4439,7 +4088,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.serial.writeSIODATA_A0(data & 0xFF);
         parentObj.serial.writeSIODATA_A1((data >> 8) & 0xFF);
         parentObj.serial.writeSIODATA_B0((data >> 16) & 0xFF);
-        parentObj.serial.writeSIODATA_B1((data >> 24) & 0xFF);
+        parentObj.serial.writeSIODATA_B1(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000124h - Serial Data C (R/W)
@@ -4450,7 +4099,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.serial.writeSIODATA_C0(data & 0xFF);
         parentObj.serial.writeSIODATA_C1((data >> 8) & 0xFF);
         parentObj.serial.writeSIODATA_D0((data >> 16) & 0xFF);
-        parentObj.serial.writeSIODATA_D1((data >> 24) & 0xFF);
+        parentObj.serial.writeSIODATA_D1(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000128h - SIOCNT - SIO Sub Mode Control (R/W)
@@ -4461,7 +4110,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.serial.writeSIOCNT0(data & 0xFF);
         parentObj.serial.writeSIOCNT1((data >> 8) & 0xFF);
         parentObj.serial.writeSIODATA8_0((data >> 16) & 0xFF);
-        parentObj.serial.writeSIODATA8_1((data >> 24) & 0xFF);
+        parentObj.serial.writeSIODATA8_1(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //400012Ch through 400012Fh - NOT USED - GLITCHED
@@ -4471,7 +4120,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
     writeIO[0x130 >> 2] = function (parentObj, data) {
         data = data | 0;
         parentObj.joypad.writeKeyControl0((data >> 16) & 0xFF);
-        parentObj.joypad.writeKeyControl1((data >> 24) & 0xFF);
+        parentObj.joypad.writeKeyControl1(data >>> 24);
     }
     //4000134h - RCNT (R/W) - Mode Selection
     writeIO[0x134 >> 2] = function (parentObj, data) {
@@ -4500,7 +4149,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.serial.writeJOYBUS_RECV0(data & 0xFF);
         parentObj.serial.writeJOYBUS_RECV1((data >> 8) & 0xFF);
         parentObj.serial.writeJOYBUS_RECV2((data >> 16) & 0xFF);
-        parentObj.serial.writeJOYBUS_RECV3((data >> 24) & 0xFF);
+        parentObj.serial.writeJOYBUS_RECV3(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000154h - JoyBus Send (R/W)
@@ -4511,7 +4160,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.serial.writeJOYBUS_SEND0(data & 0xFF);
         parentObj.serial.writeJOYBUS_SEND1((data >> 8) & 0xFF);
         parentObj.serial.writeJOYBUS_SEND2((data >> 16) & 0xFF);
-        parentObj.serial.writeJOYBUS_SEND3((data >> 24) & 0xFF);
+        parentObj.serial.writeJOYBUS_SEND3(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000158h - JoyBus Stat (R/W)
@@ -4531,7 +4180,7 @@ GameBoyAdvanceMemoryDispatchGenerator.prototype.generateMemoryWriteIO32 = functi
         parentObj.irq.writeIE0(data & 0xFF);
         parentObj.irq.writeIE1((data >> 8) & 0xFF);
         parentObj.irq.writeIF0((data >> 16) & 0xFF);
-        parentObj.irq.writeIF1((data >> 24) & 0xFF);
+        parentObj.irq.writeIF1(data >>> 24);
         parentObj.IOCore.updateCoreEventTime();
     }
     //4000204h - WAITCNT - Waitstate Control (R/W)

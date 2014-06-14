@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,6 @@ GameBoyAdvanceTimer.prototype.prescalarLookup = [
     0xA
 ];
 GameBoyAdvanceTimer.prototype.initialize = function () {
-    this.nextTimer0OverflowSingle = (!!Math.imul) ? this.nextTimer0OverflowSingleFast : this.nextTimer0OverflowSingleSlow;
     this.initializeTimers();
 }
 GameBoyAdvanceTimer.prototype.initializeTimers = function () {
@@ -388,18 +387,24 @@ GameBoyAdvanceTimer.prototype.nextTimer0Overflow = function (numOverflows) {
     }
     return -1;
 }
-GameBoyAdvanceTimer.prototype.nextTimer0OverflowSingleSlow = function () {
-    if (this.timer0Enabled) {
-        return ((0x10000 - this.timer0Counter) * this.timer0Prescalar) - this.timer0Precounter;
+if (!!Math.imul) {
+    //Math.imul found, insert the optimized path in:
+    GameBoyAdvanceTimer.prototype.nextTimer0OverflowSingle = function () {
+        var eventTime = -1;
+        if (this.timer0Enabled) {
+            eventTime = (Math.imul((0x10000 - (this.timer0Counter | 0)), this.timer0Prescalar | 0) - (this.timer0Precounter | 0)) | 0;
+        }
+        return eventTime | 0;
     }
-    return -1;
 }
-GameBoyAdvanceTimer.prototype.nextTimer0OverflowSingleFast = function () {
-    var eventTime = -1;
-    if (this.timer0Enabled) {
-        eventTime = (Math.imul((0x10000 - (this.timer0Counter | 0)), this.timer0Prescalar | 0) - (this.timer0Precounter | 0)) | 0;
+else {
+    //Math.imul not found, use the compatibility method:
+    GameBoyAdvanceTimer.prototype.nextTimer0OverflowSingle = function () {
+        if (this.timer0Enabled) {
+            return ((0x10000 - this.timer0Counter) * this.timer0Prescalar) - this.timer0Precounter;
+        }
+        return -1;
     }
-    return eventTime | 0;
 }
 GameBoyAdvanceTimer.prototype.nextTimer1Overflow = function (numOverflows) {
     --numOverflows;

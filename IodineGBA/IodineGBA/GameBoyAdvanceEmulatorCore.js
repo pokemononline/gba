@@ -17,18 +17,16 @@
  */
 function GameBoyAdvanceEmulator() {
     this.settings = {
-        "slowDownBusHack":false,            //Double up wait states hack.
         "SKIPBoot":false,                   //Skip the BIOS boot screen.
-        "dynarecEnabled":false,             //Use the dynarec engine?
         "lineSkip":false,                   //Skip every other line draw.
-        "dynarecTHUMB":true,                //Enable THUMB compiling.
-        "dynarecARM":false,                 //Enable ARM compiling.
         "useWorkers":true,                  //Enable Web Workers for compiling.
         "audioVolume":1,                    //Starting audio volume.
         "audioBufferUnderrunLimit":4,       //Audio buffer minimum span amount over x interpreter iterations.
         "audioBufferSize":20,               //Audio buffer maximum span amount over x interpreter iterations.
         "timerIntervalRate":16,             //How often the emulator core is called into (in milliseconds).
-        "emulatorSpeed":1                   //Speed multiplier of the emulator.
+        "emulatorSpeed":1,                  //Speed multiplier of the emulator.
+        "metricCollectionMinimum":30,       //How many cycles to collect before determining speed.
+        "dynamicSpeed":false                //Whether to actively change the target speed for best user experience.
     }
     this.audioFound = false;                  //Do we have audio output sink found yet?
     this.romFound = false;                    //Do we have a ROM loaded in?
@@ -46,7 +44,10 @@ function GameBoyAdvanceEmulator() {
     this.audioUpdateState = false;            //Do we need to update the sound core with new info?
     this.saveExportHandler = null;            //Save export handler attached by GUI.
     this.saveImportHandler = null;            //Save import handler attached by GUI.
+    this.speedCallback = null;                //Speed report handler attached by GUI.
     this.graphicsFrameCallback = null;        //Graphics blitter handler attached by GUI.
+    this.clockCyclesSinceStart = 0;           //Clocking hueristics reference
+    this.metricCollectionCounted = 0;         //Clocking hueristics reference
     this.metricStart = null;                  //Date object reference.
     this.calculateTimings();                  //Calculate some multipliers against the core emulator timer.
     this.generateCoreExposed();               //Generate a limit API for the core to call this shell object.
@@ -117,6 +118,7 @@ GameBoyAdvanceEmulator.prototype.timerCallback = function () {
     }
 }
 GameBoyAdvanceEmulator.prototype.iterationStartSequence = function () {
+    this.calculateSpeedPercentage();                                    //Calculate the emulator realtime run speed heuristics.
     this.faultFound = true;                                             //If the end routine doesn't unset this, then we are marked as having crashed.
     this.audioUnderrunAdjustment();                                     //If audio is enabled, look to see how much we should overclock by to maintain the audio buffer.
     this.audioPushNewState();                                           //Check to see if we need to update the audio core for any output changes.
@@ -152,6 +154,11 @@ GameBoyAdvanceEmulator.prototype.attachSaveExportHandler = function (handler) {
 GameBoyAdvanceEmulator.prototype.attachSaveImportHandler = function (handler) {
     if (typeof handler == "function") {
         this.saveImportHandler = handler;
+    }
+}
+GameBoyAdvanceEmulator.prototype.attachSpeedHandler = function (handler) {
+    if (typeof handler == "function") {
+        this.speedCallback = handler;
     }
 }
 GameBoyAdvanceEmulator.prototype.importSave = function () {
@@ -202,24 +209,37 @@ GameBoyAdvanceEmulator.prototype.changeCoreTimer = function (newTimerIntervalRat
 }
 GameBoyAdvanceEmulator.prototype.resetMetrics = function () {
     this.clockCyclesSinceStart = 0;
+    this.metricCollectionCounted = 0;
     this.metricStart = new Date();
 }
 GameBoyAdvanceEmulator.prototype.calculateTimings = function () {
     this.clocksPerSecond = this.settings.emulatorSpeed * 0x1000000;
     this.CPUCyclesTotal = this.CPUCyclesPerIteration = (this.clocksPerSecond / 1000 * this.settings.timerIntervalRate) | 0;
 }
-GameBoyAdvanceEmulator.prototype.getSpeedPercentage = function () {
-    if (this.metricStart && !this.paused) {
-        var metricEnd = new Date();
-        var timeDiff = Math.max(metricEnd.getTime() - this.metricStart.getTime(), 1);
-        var result = ((this.settings.timerIntervalRate * this.clockCyclesSinceStart / timeDiff) / this.CPUCyclesPerIteration) * 100;
-        this.resetMetrics();
-        return result.toFixed(2) + "%";
+GameBoyAdvanceEmulator.prototype.calculateSpeedPercentage = function () {
+    if (this.metricStart) {
+        if (this.metricCollectionCounted >= this.settings.metricCollectionMinimum) {
+            var metricEnd = new Date();
+            var timeDiff = Math.max(metricEnd.getTime() - this.metricStart.getTime(), 1);
+            var result = ((this.settings.timerIntervalRate * this.clockCyclesSinceStart / timeDiff) / this.CPUCyclesPerIteration) * 100;
+            if (this.settings.dynamicSpeed) {
+                if (result < 97) {
+                    this.setSpeed(this.getSpeed() - 0.02);
+                }
+                else if (this.getSpeed() < 1) {
+                    this.setSpeed(Math.min(this.getSpeed() + 0.02, 1));
+                }
+            }
+            this.resetMetrics();
+            if (this.speedCallback) {
+                this.speedCallback(result.toFixed(2) + "%");
+            }
+        }
     }
     else {
         this.resetMetrics();
-        return "Paused";
     }
+    ++this.metricCollectionCounted;
 }
 GameBoyAdvanceEmulator.prototype.initializeCore = function () {
     //Setup a new instance of the i/o core:
@@ -353,15 +373,12 @@ GameBoyAdvanceEmulator.prototype.toggleSkipBootROM = function (skipBoot) {
         this.importSave();
     }
 }
-GameBoyAdvanceEmulator.prototype.toggleDynarec = function (dynarecEnabled) {
-    this.settings.dynarecEnabled = !!dynarecEnabled;
+GameBoyAdvanceEmulator.prototype.toggleDynamicSpeed = function (dynamicSpeed) {
+    this.settings.dynamicSpeed = !!dynamicSpeed;
+    if (!this.settings.dynamicSpeed) {
+        this.setSpeed(1);
+    }
 }
 GameBoyAdvanceEmulator.prototype.toggleLineSkip = function (lineSkip) {
     this.settings.lineSkip = !!lineSkip;
-}
-GameBoyAdvanceEmulator.prototype.toggleSlowDownBusHack = function (slowDownBusHack) {
-    this.settings.slowDownBusHack = !!slowDownBusHack;
-    if (!this.faultFound && this.romFound) {
-        this.IOCore.wait.preprocessBusSpeedHack(this.settings.slowDownBusHack);
-    }
 }

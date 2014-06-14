@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,6 @@ GameBoyAdvanceCartridge.prototype.initialize = function () {
     this.ROM32 = getInt32View(this.ROM);
     this.decodeName();
     this.decodeFlashType();
-    this.preprocessROMAccess();
 }
 GameBoyAdvanceCartridge.prototype.getROMArray = function (old_array) {
     this.ROMLength = Math.min((old_array.length >> 2) << 2, 0x2000000);
@@ -111,10 +110,6 @@ GameBoyAdvanceCartridge.prototype.decodeFlashType = function () {
     this.flash_is128 = ((flash_types | 0) >= 4);
     this.flash_isAtmel = ((flash_types | 0) <= 1);
 }
-GameBoyAdvanceCartridge.prototype.preprocessROMAccess = function () {
-    this.readROMOnly16 = (this.ROM16) ? this.readROMOnly16Optimized : this.readROMOnly16Slow;
-    this.readROMOnly32 = (this.ROM32) ? this.readROMOnly32Optimized : this.readROMOnly32Slow;
-}
 GameBoyAdvanceCartridge.prototype.readROMOnly8 = function (address) {
     address = address | 0;
     var data = 0;
@@ -123,37 +118,41 @@ GameBoyAdvanceCartridge.prototype.readROMOnly8 = function (address) {
     }
     return data | 0;
 }
-GameBoyAdvanceCartridge.prototype.readROMOnly16Slow = function (address) {
-    address = address | 0;
-    var data = 0;
-    if ((address | 0) < (this.ROMLength | 0)) {
-        data = this.ROM[address] | (this.ROM[address | 1] << 8);
+if (__LITTLE_ENDIAN__) {
+    GameBoyAdvanceCartridge.prototype.readROMOnly16 = function (address) {
+        address = address | 0;
+        var data = 0;
+        if ((address | 0) < (this.ROMLength | 0)) {
+            data = this.ROM16[(address >> 1) & 0xFFFFFF] | 0;
+        }
+        return data | 0;
     }
-    return data | 0;
+    GameBoyAdvanceCartridge.prototype.readROMOnly32 = function (address) {
+        address = address | 0;
+        var data = 0;
+        if ((address | 0) < (this.ROMLength | 0)) {
+            data = this.ROM32[(address >> 2) & 0x7FFFFF] | 0;
+        }
+        return data | 0;
+    }
 }
-GameBoyAdvanceCartridge.prototype.readROMOnly16Optimized = function (address) {
-    address = address | 0;
-    var data = 0;
-    if ((address | 0) < (this.ROMLength | 0)) {
-        data = this.ROM16[(address >> 1) & 0xFFFFFF] | 0;
+else {
+    GameBoyAdvanceCartridge.prototype.readROMOnly16 = function (address) {
+        address = address | 0;
+        var data = 0;
+        if ((address | 0) < (this.ROMLength | 0)) {
+            data = this.ROM[address] | (this.ROM[address | 1] << 8);
+        }
+        return data | 0;
     }
-    return data | 0;
-}
-GameBoyAdvanceCartridge.prototype.readROMOnly32Slow = function (address) {
-    address = address | 0;
-    var data = 0;
-    if ((address | 0) < (this.ROMLength | 0)) {
-        data = this.ROM[address] | (this.ROM[address | 1] << 8) | (this.ROM[address | 2] << 16)  | (this.ROM[address | 3] << 24);
+    GameBoyAdvanceCartridge.prototype.readROMOnly32 = function (address) {
+        address = address | 0;
+        var data = 0;
+        if ((address | 0) < (this.ROMLength | 0)) {
+            data = this.ROM[address] | (this.ROM[address | 1] << 8) | (this.ROM[address | 2] << 16)  | (this.ROM[address | 3] << 24);
+        }
+        return data | 0;
     }
-    return data | 0;
-}
-GameBoyAdvanceCartridge.prototype.readROMOnly32Optimized = function (address) {
-    address = address | 0;
-    var data = 0;
-    if ((address | 0) < (this.ROMLength | 0)) {
-        data = this.ROM32[(address >> 2) & 0x7FFFFF] | 0;
-    }
-    return data | 0;
 }
 GameBoyAdvanceCartridge.prototype.readROM8 = function (address) {
     address = address | 0;

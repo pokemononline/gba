@@ -25,8 +25,6 @@ function GameBoyAdvanceIO(settings, coreExposed, BIOS, ROM) {
     this.timerClocks = 0;
     this.serialClocks = 0;
     this.nextEventClocks = 0;
-    this.lastDynarecUsage = 1;
-    this.flaggedDynarec = 0;
     this.BIOSFound = false;
     //References passed to us:
     this.settings = settings;
@@ -47,7 +45,8 @@ function GameBoyAdvanceIO(settings, coreExposed, BIOS, ROM) {
     this.wait = new GameBoyAdvanceWait(this);
     this.cpu = new GameBoyAdvanceCPU(this);
     this.memory.loadReferences();
-    this.preprocessCPUHandler(0);   //Start in interpreter.
+    //Start in CPU interpreter mode:
+    this.stepHandle = this.handleCPUInterpreter;
 }
 GameBoyAdvanceIO.prototype.iterate = function (CPUCyclesTotal) {
     //Find out how many clocks to iterate through this run:
@@ -143,7 +142,7 @@ GameBoyAdvanceIO.prototype.getRemainingCycles = function () {
 GameBoyAdvanceIO.prototype.preprocessSystemStepper = function () {
     switch (this.systemStatus | 0) {
         case 0: //CPU Handle State
-            this.stepHandle = this.handleCPU;
+            this.stepHandle = this.handleCPUInterpreter;
             break;
         case 1:    //DMA Handle State
             this.stepHandle = this.handleDMA;
@@ -162,22 +161,6 @@ GameBoyAdvanceIO.prototype.handleCPUInterpreter = function () {
     //Execute next instruction:
     //Interpreter:
     this.cpu.executeIteration();
-}
-GameBoyAdvanceIO.prototype.handleCPUDynarec = function () {
-    //Execute next instruction:
-    //LLE Dynarec JIT:
-    this.flaggedDynarec = 0;
-    this.cpu.dynarec.enter();
-    this.preprocessCPUHandler(this.flaggedDynarec | 0);
-}
-GameBoyAdvanceIO.prototype.preprocessCPUHandler = function (useDynarec) {
-    useDynarec = useDynarec | 0;
-    this.flaggedDynarec = useDynarec;
-    if ((this.lastDynarecUsage | 0) != useDynarec) {
-        this.lastDynarecUsage = useDynarec;
-        this.handleCPU = (useDynarec == 0) ? this.handleCPUInterpreter : this.handleCPUDynarec;
-        this.preprocessSystemStepper();
-    }
 }
 GameBoyAdvanceIO.prototype.handleDMA = function () {
     this.dma.perform();
@@ -232,13 +215,11 @@ GameBoyAdvanceIO.prototype.deflagStepper = function (statusFlag) {
     statusFlag = statusFlag | 0;
     //Deflag a system event to step through:
     this.systemStatus = this.systemStatus & (~statusFlag);
-    this.cpu.checkCPUExecutionStatus();
     this.preprocessSystemStepper();
 }
 GameBoyAdvanceIO.prototype.flagStepper = function (statusFlag) {
     statusFlag = statusFlag | 0;
     //Flag a system event to step through:
     this.systemStatus = this.systemStatus | statusFlag;
-    this.cpu.checkCPUExecutionStatus();
     this.preprocessSystemStepper();
 }

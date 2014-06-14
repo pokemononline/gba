@@ -39,30 +39,60 @@ GameBoyAdvanceAffineBGRenderer.prototype.initialize = function () {
     this.priorityPreprocess();
     this.offsetReferenceCounters();
 }
-GameBoyAdvanceAffineBGRenderer.prototype.renderScanLine = function (line, BGObject) {
-    line = line | 0;
-    var x = this.pb | 0;
-    var y = this.pd | 0;
-    if (this.gfx.BGMosaic[this.BGLayer & 3]) {
-        //Correct line number for mosaic:
-        var mosaicY = this.gfx.mosaicRenderer.getMosaicYOffset(line | 0) | 0;
-        x = ((x | 0) - ((this.actualBGdmx | 0) * (mosaicY | 0))) | 0;
-        y = ((y | 0) - ((this.actualBGdmy | 0) * (mosaicY | 0))) | 0;
+if (!!Math.imul) {
+    //Math.imul found, insert the optimized path in:
+    GameBoyAdvanceAffineBGRenderer.prototype.renderScanLine = function (line, BGObject) {
+        line = line | 0;
+        var x = this.pb | 0;
+        var y = this.pd | 0;
+        if (this.gfx.BGMosaic[this.BGLayer & 3]) {
+            //Correct line number for mosaic:
+            var mosaicY = this.gfx.mosaicRenderer.getMosaicYOffset(line | 0) | 0;
+            x = ((x | 0) - Math.imul(this.actualBGdmx | 0, mosaicY | 0)) | 0;
+            y = ((y | 0) - Math.imul(this.actualBGdmy | 0, mosaicY | 0)) | 0;
+        }
+        for (var position = 0; position < 240; position = ((position | 0) + 1) | 0, x = ((x | 0) + (this.actualBGdx | 0)) | 0, y = ((y | 0) + (this.actualBGdy | 0)) | 0) {
+            //Fetch pixel:
+            this.scratchBuffer[position | 0] = this.priorityFlag | BGObject.fetchPixel(x >> 8, y >> 8);
+        }
+        if (this.gfx.BGMosaic[this.BGLayer & 3]) {
+            //Pixelize the line horizontally:
+            this.gfx.mosaicRenderer.renderMosaicHorizontal(this.scratchBuffer);
+        }
+        return this.scratchBuffer;
     }
-    for (var position = 0; position < 240; position = ((position | 0) + 1) | 0, x = ((x | 0) + (this.actualBGdx | 0)) | 0, y = ((y | 0) + (this.actualBGdy | 0)) | 0) {
-        //Fetch pixel:
-        this.scratchBuffer[position | 0] = this.priorityFlag | BGObject.fetchPixel(x >> 8, y >> 8);
+    GameBoyAdvanceAffineBGRenderer.prototype.offsetReferenceCounters = function () {
+        var end = this.gfx.lastUnrenderedLine | 0;
+        this.pb = Math.imul(((this.pb | 0) + (this.actualBGdmx | 0)) | 0, end | 0) | 0;
+        this.pd = Math.imul(((this.pd | 0) + (this.actualBGdmy | 0)) | 0, end | 0) | 0;
     }
-    if (this.gfx.BGMosaic[this.BGLayer & 3]) {
-        //Pixelize the line horizontally:
-        this.gfx.mosaicRenderer.renderMosaicHorizontal(this.scratchBuffer);
-    }
-    return this.scratchBuffer;
 }
-GameBoyAdvanceAffineBGRenderer.prototype.offsetReferenceCounters = function () {
-    var end = this.gfx.lastUnrenderedLine | 0;
-    this.pb = (((this.pb | 0) + (this.actualBGdmx | 0)) * (end | 0)) | 0;
-    this.pd = (((this.pd | 0) + (this.actualBGdmy | 0)) * (end | 0)) | 0;
+else {
+    //Math.imul not found, use the compatibility method:
+    GameBoyAdvanceAffineBGRenderer.prototype.renderScanLine = function (line, BGObject) {
+        var x = this.pb;
+        var y = this.pd;
+        if (this.gfx.BGMosaic[this.BGLayer & 3]) {
+            //Correct line number for mosaic:
+            var mosaicY = this.gfx.mosaicRenderer.getMosaicYOffset(line);
+            x -= this.actualBGdmx * mosaicY;
+            y -= this.actualBGdmy * mosaicY;
+        }
+        for (var position = 0; position < 240; ++position, x += this.actualBGdx, y += this.actualBGdy) {
+            //Fetch pixel:
+            this.scratchBuffer[position] = this.priorityFlag | BGObject.fetchPixel(x >> 8, y >> 8);
+        }
+        if (this.gfx.BGMosaic[this.BGLayer & 3]) {
+            //Pixelize the line horizontally:
+            this.gfx.mosaicRenderer.renderMosaicHorizontal(this.scratchBuffer);
+        }
+        return this.scratchBuffer;
+    }
+    GameBoyAdvanceAffineBGRenderer.prototype.offsetReferenceCounters = function () {
+        var end = this.gfx.lastUnrenderedLine | 0;
+        this.pb = (((this.pb | 0) + (this.actualBGdmx | 0)) * (end | 0)) | 0;
+        this.pd = (((this.pd | 0) + (this.actualBGdmy | 0)) * (end | 0)) | 0;
+    }
 }
 GameBoyAdvanceAffineBGRenderer.prototype.incrementReferenceCounters = function () {
     this.pb = ((this.pb | 0) + (this.actualBGdmx | 0)) | 0;

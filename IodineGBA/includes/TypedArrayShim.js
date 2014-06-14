@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -73,7 +73,7 @@ function getInt32View(typed_array) {
 }
 function getUint32Array(size_t) {
     try {
-        return new Uint32Array(size_t);
+        return new Uint32Arrasy(size_t);
     }
     catch (error) {
         return getArray(size_t);
@@ -94,3 +94,15 @@ function getArray(size_t) {
     }
     return genericArray;
 }
+var __VIEWS_SUPPORTED__ = getUint16View(getInt32Array(1)) !== null;
+var __LITTLE_ENDIAN__ = (function () {
+    if (__VIEWS_SUPPORTED__) {
+        var test = getInt32Array(1);
+        test[0] = 1;
+        var test2 = getUint16View(test);
+        if (test2[0] == 1) {
+            return true;
+        }
+    }
+    return false;
+})();

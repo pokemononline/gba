@@ -16,158 +16,25 @@
  *
  */
 var games = {
-             "advancewars":
-                [
-                            "Advance Wars",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "alienhominid":
-                [
-                            "Alien Hominid",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "kirbymirror":
-                [
-                            "Kirby & The Amazing Mirror",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "kirbynightmare":
-                [
-                            "Kirby: Nightmare in Dreamland",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "marioparty":
-                [
-                            "Mario Party Advance",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "megamanbass":
-                [
-                            "Megaman & Bass",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "pokemonflorasky":
-                [
-                            "Pokemon Flora Sky Rom Hack",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "pokemonemerald":
-                [
-                            "Pokemon Emerald",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "pokemonruby":
-                [
-                            "Pokemon Ruby",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "pokemonsapphire":
-                [
-                            "Pokemon Sapphire",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "pokemonred":
-                [
-                            "Pokemon Fire Red",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-             "sonicbattle":
-                [
-                            "Sonic Battle",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "supermonkeyballjr":
-                [
-                            "Super Monkey Ball Jr.",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "superstar":
-                [
-                            "Mario & Luigi: Superstar Saga",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-             "supermarioadvance":
-                [
-                            "Super Mario Advance",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-              "bubblebobble":
-                [
-                            "Bubble Bobble",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-            "simpsons":
-                [
-                            "The Simpsons: Road Rage",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ],
-            "gba_video_pokemon_1":
-                [
-                            "Pokemon Video Pak 1",
-                            {
-                                "lineskip":false,
-                                "speedhack":true
-                            }
-                ],
-            "sonicpinball":
-                [
-                            "Sonic Pinball",
-                            {
-                                "lineskip":false,
-                                "speedhack":false
-                            }
-                ]
+    "advancewars":"Advance Wars",
+    "alienhominid":"Alien Hominid",
+    "kirbymirror":"Kirby & The Amazing Mirror",
+    "kirbynightmare":"Kirby: Nightmare in Dreamland",
+    "marioparty":"Mario Party Advance",
+    "megamanbass":"Megaman & Bass",
+    "pokemonflorasky":"Pokemon Flora Sky Rom Hack",
+    "pokemonemerald":"Pokemon Emerald",
+    "pokemonruby":"Pokemon Ruby",
+    "pokemonsapphire":"Pokemon Sapphire",
+    "pokemonred":"Pokemon Fire Red",
+    "sonicbattle":"Sonic Battle",
+    "supermonkeyballjr":"Super Monkey Ball Jr.",
+    "superstar":"Mario & Luigi: Superstar Saga",
+    "supermarioadvance":"Super Mario Advance",
+    "bubblebobble":"Bubble Bobble",
+    "simpsons":"The Simpsons: Road Rage",
+    "gba_video_pokemon_1":"Pokemon Video Pak 1",
+    "sonicpinball":"Sonic Pinball"
 };
 var Iodine = null;
 var Blitter = null;
@@ -175,6 +42,10 @@ var Mixer = null;
 var MixerInput = null;
 var timerID = null;
 window.onload = function () {
+    if (!games[location.hash.substr(1)]) {
+        alert("Invalid game request!");
+        return;
+    }
     //Initialize Iodine:
     Iodine = new GameBoyAdvanceEmulator();
     //Initialize the graphics:
@@ -198,15 +69,9 @@ function registerBIOS() {
     downloadROM(location.hash.substr(1));
 }
 function downloadROM(gamename) {
-    var game = games[gamename];
     Iodine.pause();
-    showTempString("Downloading \"" + game[0] + ".\"");
+    showTempString("Downloading \"" + games[gamename] + ".\"");
     downloadFile("Binaries/" + gamename + ".gba", registerROM);
-    setPreference(game[1]);
-}
-function setPreference(prefObj) {
-    Iodine.toggleLineSkip(prefObj.lineskip);
-    Iodine.toggleSlowDownBusHack(prefObj.speedhack);
 }
 function registerROM() {
     clearTempString();
@@ -231,9 +96,9 @@ function registerGUIEvents() {
     addEvent("keydown", document, keyDown);
     addEvent("keyup", document, keyUpPreprocess);
     addEvent("unload", document, ExportSave);
-    setInterval(function () {
-        document.title = games[location.hash.substr(1)][0] + " - " + Iodine.getSpeedPercentage();
-    },500);
+    Iodine.attachSpeedHandler(function (speed) {
+        document.title = games[location.hash.substr(1)] + " - " + speed;
+    });
 }
 function lowerVolume() {
     var emuVolume = Math.max(Iodine.getVolume() - 0.04, 0);

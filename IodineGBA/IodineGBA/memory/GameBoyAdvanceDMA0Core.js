@@ -46,7 +46,7 @@ GameBoyAdvanceDMA0.prototype.initialize = function () {
     this.repeat = 0;
     this.sourceControl = 0;
     this.destinationControl = 0;
-    this.memoryAccessCache = new GameBoyAdvanceMemoryCache(this.DMACore.IOCore.memory);
+    this.memory = this.DMACore.IOCore.memory;
 }
 GameBoyAdvanceDMA0.prototype.writeDMASource0 = function (data) {
     data = data | 0;
@@ -168,14 +168,14 @@ GameBoyAdvanceDMA0.prototype.handleDMACopy = function () {
     //Transfer Data:
     if ((this.is32Bit | 0) == 4) {
         //32-bit Transfer:
-        this.DMACore.fetch = this.memoryAccessCache.memoryRead32(source | 0) | 0;
-        this.memoryAccessCache.memoryWrite32(destination | 0, this.DMACore.fetch | 0);
+        this.DMACore.fetch = this.memory.memoryRead32(source | 0) | 0;
+        this.memory.memoryWrite32(destination | 0, this.DMACore.fetch | 0);
         this.decrementWordCount(source | 0, destination | 0, 4);
     }
     else {
         //16-bit Transfer:
-        this.DMACore.fetch = this.memoryAccessCache.memoryRead16(source | 0) | 0;
-        this.memoryAccessCache.memoryWrite16(destination | 0, this.DMACore.fetch | 0);
+        this.DMACore.fetch = this.memory.memoryRead16(source | 0) | 0;
+        this.memory.memoryWrite16(destination | 0, this.DMACore.fetch | 0);
         this.DMACore.fetch |= this.DMACore.fetch << 16;    //Mirror extreme edge case?
         this.decrementWordCount(source | 0, destination | 0, 2);
     }

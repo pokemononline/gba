@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,21 +26,283 @@ THUMBInstructionSet.prototype.initialize = function () {
     this.fetch = 0;
     this.decode = 0;
     this.execute = 0;
-    this.stackMemoryCache = new GameBoyAdvanceMemoryCache(this.CPUCore.memory);
-    this.compileInstructionMap();
+    this.memory = this.CPUCore.memory;
 }
 THUMBInstructionSet.prototype.executeIteration = function () {
     //Push the new fetch access:
-    this.fetch = this.wait.CPUGetOpcode16(this.readPC() | 0) | 0;
+    this.fetch = this.memory.memoryReadCPU16(this.readPC() | 0) | 0;
     //Execute Instruction:
-    this.instructionMap[this.execute >> 6](this);
+    this.executeDecoded();
     //Update the pipelining state:
     this.execute = this.decode | 0;
     this.decode = this.fetch | 0;
 }
+THUMBInstructionSet.prototype.executeDecoded = function () {
+    /*
+     Instruction Decode Pattern:
+      X = Possible opcode bit; N = Data Bit, definitely not an opcode bit
+     OPCODE: XXXXXXXXXXNNNNNN
+     
+     Since many of those "X"s are redundant and possibly data, we can "process"
+     it and use a table to further decide what unique opcode it is, leaving us with
+     a dense switch statement. Not "processing" the opcode beforehand would leave us
+     with a 10 bit wide switch, which is slow in JS, and using a function in array computed
+     goto trick is not optimal in JavaScript.
+     */
+    switch (this.instructionMap[this.execute >> 6] & 0xFF) {    //Leave the "& 0xFF" there, it's a uint8 type guard.
+        case 0:
+            this.CMPimm8();
+            break;
+        case 1:
+            this.BEQ();
+            break;
+        case 2:
+            this.MOVH_LH();
+            break;
+        case 3:
+            this.LDRimm5();
+            break;
+        case 4:
+            this.AND();
+            break;
+        case 5:
+            this.LDRBimm5();
+            break;
+        case 6:
+            this.LSLimm();
+            break;
+        case 7:
+            this.LSRimm();
+            break;
+        case 8:
+            this.MOVimm8();
+            break;
+        case 9:
+            this.CMP();
+            break;
+        case 10:
+            this.LDRSP();
+            break;
+        case 11:
+            this.ADDimm3();
+            break;
+        case 12:
+            this.ADDreg();
+            break;
+        case 13:
+            this.STRSP();
+            break;
+        case 14:
+            this.B();
+            break;
+        case 15:
+            this.LDRPC();
+            break;
+        case 16:
+            this.MOVH_HL();
+            break;
+        case 17:
+            this.ADDimm8();
+            break;
+        case 18:
+            this.SUBreg();
+            break;
+        case 19:
+            this.BCC();
+            break;
+        case 20:
+            this.STRimm5();
+            break;
+        case 21:
+            this.ORR();
+            break;
+        case 22:
+            this.LDRHimm5();
+            break;
+        case 23:
+            this.BCS();
+            break;
+        case 24:
+            this.BNE();
+            break;
+        case 25:
+            this.BGE();
+            break;
+        case 26:
+            this.POP();
+            break;
+        case 27:
+            this.ADDH_HL();
+            break;
+        case 28:
+            this.STRHimm5();
+            break;
+        case 29:
+            this.BLE();
+            break;
+        case 30:
+            this.ASRimm();
+            break;
+        case 31:
+            this.MUL();
+            break;
+        case 32:
+            this.BLsetup();
+            break;
+        case 33:
+            this.BLoff();
+            break;
+        case 34:
+            this.BGT();
+            break;
+        case 35:
+            this.STRHreg();
+            break;
+        case 36:
+            this.LDRHreg();
+            break;
+        case 37:
+            this.BX_L();
+            break;
+        case 38:
+            this.BLT();
+            break;
+        case 39:
+            this.ADDSPimm7();
+            break;
+        case 40:
+            this.PUSHlr();
+            break;
+        case 41:
+            this.PUSH();
+            break;
+        case 42:
+            this.SUBimm8();
+            break;
+        case 43:
+            this.ROR();
+            break;
+        case 44:
+            this.LDRSHreg();
+            break;
+        case 45:
+            this.STRBimm5();
+            break;
+        case 46:
+            this.NEG();
+            break;
+        case 47:
+            this.BHI();
+            break;
+        case 48:
+            this.TST();
+            break;
+        case 49:
+            this.BX_H();
+            break;
+        case 50:
+            this.STMIA();
+            break;
+        case 51:
+            this.BLS();
+            break;
+        case 52:
+            this.SWI();
+            break;
+        case 53:
+            this.LDMIA();
+            break;
+        case 54:
+            this.MOVH_HH();
+            break;
+        case 55:
+            this.LSL();
+            break;
+        case 56:
+            this.POPpc();
+            break;
+        case 57:
+            this.LSR();
+            break;
+        case 58:
+            this.CMPH_LH();
+            break;
+        case 59:
+            this.EOR();
+            break;
+        case 60:
+            this.SUBimm3();
+            break;
+        case 61:
+            this.ADDH_LH();
+            break;
+        case 62:
+            this.BPL();
+            break;
+        case 63:
+            this.CMPH_HL();
+            break;
+        case 64:
+            this.ADDPC();
+            break;
+        case 65:
+            this.LDRSBreg();
+            break;
+        case 66:
+            this.BIC();
+            break;
+        case 67:
+            this.ADDSP();
+            break;
+        case 68:
+            this.MVN();
+            break;
+        case 69:
+            this.ASR();
+            break;
+        case 70:
+            this.LDRreg();
+            break;
+        case 71:
+            this.ADC();
+            break;
+        case 72:
+            this.SBC();
+            break;
+        case 73:
+            this.BMI();
+            break;
+        case 74:
+            this.STRreg();
+            break;
+        case 75:
+            this.CMN();
+            break;
+        case 76:
+            this.LDRBreg();
+            break;
+        case 77:
+            this.ADDH_HH();
+            break;
+        case 78:
+            this.CMPH_HH();
+            break;
+        case 79:
+            this.STRBreg();
+            break;
+        case 80:
+            this.BVS();
+            break;
+        case 81:
+            this.BVC();
+            break;
+        default:
+            this.UNDEFINED();
+    }
+}
 THUMBInstructionSet.prototype.executeBubble = function () {
     //Push the new fetch access:
-    this.fetch = this.wait.CPUGetOpcode16(this.readPC() | 0) | 0;
+    this.fetch = this.memory.memoryReadFast16(this.readPC() | 0) | 0;
     //Update the pipelining state:
     this.execute = this.decode | 0;
     this.decode = this.fetch | 0;
@@ -155,908 +417,888 @@ THUMBInstructionSet.prototype.readPC = function () {
 THUMBInstructionSet.prototype.getCurrentFetchValue = function () {
     return this.fetch | (this.fetch << 16);
 }
-THUMBInstructionSet.prototype.LSLimm = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var offset = (parentObj.execute >> 6) & 0x1F;
+THUMBInstructionSet.prototype.LSLimm = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var offset = (this.execute >> 6) & 0x1F;
     if (offset > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        parentObj.CPSR.setCarry((source << ((offset - 1) | 0)) < 0);
+        this.CPSR.setCarry((source << ((offset - 1) | 0)) < 0);
         //Perform shift:
         source <<= offset;
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(source | 0);
-    parentObj.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNegativeInt(source | 0);
+    this.CPSR.setZeroInt(source | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(source | 0);
+    this.write0OffsetLowRegister(source | 0);
 }
-THUMBInstructionSet.prototype.LSRimm = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var offset = (parentObj.execute >> 6) & 0x1F;
+THUMBInstructionSet.prototype.LSRimm = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var offset = (this.execute >> 6) & 0x1F;
     if (offset > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        parentObj.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
+        this.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
         //Perform shift:
         source = (source >>> offset) | 0;
     }
     else {
-        parentObj.CPSR.setCarry(source < 0);
+        this.CPSR.setCarry(source < 0);
         source = 0;
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(source | 0);
-    parentObj.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNegativeInt(source | 0);
+    this.CPSR.setZeroInt(source | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(source | 0);
+    this.write0OffsetLowRegister(source | 0);
 }
-THUMBInstructionSet.prototype.ASRimm = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var offset = (parentObj.execute >> 6) & 0x1F;
+THUMBInstructionSet.prototype.ASRimm = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var offset = (this.execute >> 6) & 0x1F;
     if (offset > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        parentObj.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
+        this.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
         //Perform shift:
         source >>= offset;
     }
     else {
-        parentObj.CPSR.setCarry(source < 0);
+        this.CPSR.setCarry(source < 0);
         source >>= 0x1F;
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(source | 0);
-    parentObj.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNegativeInt(source | 0);
+    this.CPSR.setZeroInt(source | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(source | 0);
+    this.write0OffsetLowRegister(source | 0);
 }
-THUMBInstructionSet.prototype.ADDreg = function (parentObj) {
-    var operand1 = parentObj.read3OffsetLowRegister() | 0;
-    var operand2 = parentObj.read6OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ADDreg = function () {
+    var operand1 = this.read3OffsetLowRegister() | 0;
+    var operand2 = this.read6OffsetLowRegister() | 0;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.SUBreg = function (parentObj) {
-    var operand1 = parentObj.read3OffsetLowRegister() | 0;
-    var operand2 = parentObj.read6OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.SUBreg = function () {
+    var operand1 = this.read3OffsetLowRegister() | 0;
+    var operand2 = this.read6OffsetLowRegister() | 0;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.ADDimm3 = function (parentObj) {
-    var operand1 = parentObj.read3OffsetLowRegister() | 0;
-    var operand2 = (parentObj.execute >> 6) & 0x7;
+THUMBInstructionSet.prototype.ADDimm3 = function () {
+    var operand1 = this.read3OffsetLowRegister() | 0;
+    var operand2 = (this.execute >> 6) & 0x7;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.SUBimm3 = function (parentObj) {
-    var operand1 = parentObj.read3OffsetLowRegister() | 0;
-    var operand2 = (parentObj.execute >> 6) & 0x7;
+THUMBInstructionSet.prototype.SUBimm3 = function () {
+    var operand1 = this.read3OffsetLowRegister() | 0;
+    var operand2 = (this.execute >> 6) & 0x7;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.MOVimm8 = function (parentObj) {
+THUMBInstructionSet.prototype.MOVimm8 = function () {
     //Get the 8-bit value to move into the register:
-    var result = parentObj.execute & 0xFF;
-    parentObj.CPSR.setNegativeFalse();
-    parentObj.CPSR.setZeroInt(result | 0);
+    var result = this.execute & 0xFF;
+    this.CPSR.setNegativeFalse();
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write8OffsetLowRegister(result | 0);
+    this.write8OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.CMPimm8 = function (parentObj) {
+THUMBInstructionSet.prototype.CMPimm8 = function () {
     //Compare an 8-bit immediate value with a register:
-    var operand1 = parentObj.read8OffsetLowRegister() | 0;
-    var operand2 = parentObj.execute & 0xFF;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.read8OffsetLowRegister() | 0;
+    var operand2 = this.execute & 0xFF;
+    this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.ADDimm8 = function (parentObj) {
+THUMBInstructionSet.prototype.ADDimm8 = function () {
     //Add an 8-bit immediate value with a register:
-    var operand1 = parentObj.read8OffsetLowRegister() | 0;
-    var operand2 = parentObj.execute & 0xFF;
-    parentObj.write8OffsetLowRegister(parentObj.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    var operand1 = this.read8OffsetLowRegister() | 0;
+    var operand2 = this.execute & 0xFF;
+    this.write8OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.SUBimm8 = function (parentObj) {
+THUMBInstructionSet.prototype.SUBimm8 = function () {
     //Subtract an 8-bit immediate value from a register:
-    var operand1 = parentObj.read8OffsetLowRegister() | 0;
-    var operand2 = parentObj.execute & 0xFF;
-    parentObj.write8OffsetLowRegister(parentObj.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    var operand1 = this.read8OffsetLowRegister() | 0;
+    var operand2 = this.execute & 0xFF;
+    this.write8OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.AND = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.AND = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND:
     var result = source & destination;
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(result | 0);
+    this.write0OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.EOR = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.EOR = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise EOR:
     var result = source ^ destination;
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(result | 0);
+    this.write0OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.LSL = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() & 0xFF;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.LSL = function () {
+    var source = this.read3OffsetLowRegister() & 0xFF;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
     if (source > 0) {
         if (source < 0x20) {
             //Shift the register data left:
-            parentObj.CPSR.setCarry((destination << ((source - 1) | 0)) < 0);
+            this.CPSR.setCarry((destination << ((source - 1) | 0)) < 0);
             destination <<= source;
         }
         else if (source == 0x20) {
             //Shift bit 0 into carry:
-            parentObj.CPSR.setCarry((destination & 0x1) == 0x1);
+            this.CPSR.setCarry((destination & 0x1) == 0x1);
             destination = 0;
         }
         else {
             //Everything Zero'd:
-            parentObj.CPSR.setCarryFalse();
+            this.CPSR.setCarryFalse();
             destination = 0;
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(destination | 0);
-    parentObj.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNegativeInt(destination | 0);
+    this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(destination | 0);
+    this.write0OffsetLowRegister(destination | 0);
 }
-THUMBInstructionSet.prototype.LSR = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() & 0xFF;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.LSR = function () {
+    var source = this.read3OffsetLowRegister() & 0xFF;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
     if (source > 0) {
         if (source < 0x20) {
             //Shift the register data right logically:
-            parentObj.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
+            this.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
             destination = (destination >>> source) | 0;
         }
         else if (source == 0x20) {
             //Shift bit 31 into carry:
-            parentObj.CPSR.setCarry(destination < 0);
+            this.CPSR.setCarry(destination < 0);
             destination = 0;
         }
         else {
             //Everything Zero'd:
-            parentObj.CPSR.setCarryFalse();
+            this.CPSR.setCarryFalse();
             destination = 0;
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(destination | 0);
-    parentObj.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNegativeInt(destination | 0);
+    this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(destination | 0);
+    this.write0OffsetLowRegister(destination | 0);
 }
-THUMBInstructionSet.prototype.ASR = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() & 0xFF;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ASR = function () {
+    var source = this.read3OffsetLowRegister() & 0xFF;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
     if (source > 0) {
         if (source < 0x20) {
             //Shift the register data right arithmetically:
-            parentObj.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
+            this.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
             destination >>= source;
         }
         else {
             //Set all bits with bit 31:
-            parentObj.CPSR.setCarry(destination < 0);
+            this.CPSR.setCarry(destination < 0);
             destination >>= 0x1F;
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(destination | 0);
-    parentObj.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNegativeInt(destination | 0);
+    this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(destination | 0);
+    this.write0OffsetLowRegister(destination | 0);
 }
-THUMBInstructionSet.prototype.ADC = function (parentObj) {
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ADC = function () {
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setADCFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setADCFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.SBC = function (parentObj) {
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.SBC = function () {
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
     //Update destination register:
-    parentObj.write0OffsetLowRegister(parentObj.CPSR.setSBCFlags(operand1 | 0, operand2 | 0) | 0);
+    this.write0OffsetLowRegister(this.CPSR.setSBCFlags(operand1 | 0, operand2 | 0) | 0);
 }
-THUMBInstructionSet.prototype.ROR = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() & 0xFF;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ROR = function () {
+    var source = this.read3OffsetLowRegister() & 0xFF;
+    var destination = this.read0OffsetLowRegister() | 0;
     if (source > 0) {
         source &= 0x1F;
         if (source > 0) {
             //CPSR Carry is set by the last bit shifted out:
-            parentObj.CPSR.setCarry(((destination >>> ((source - 1) | 0)) & 0x1) != 0);
+            this.CPSR.setCarry(((destination >>> ((source - 1) | 0)) & 0x1) != 0);
             //Perform rotate:
             destination = (destination << ((0x20 - source) | 0)) | (destination >>> (source | 0));
         }
         else {
-            parentObj.CPSR.setCarry(destination < 0);
+            this.CPSR.setCarry(destination < 0);
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    parentObj.CPSR.setNegativeInt(destination | 0);
-    parentObj.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNegativeInt(destination | 0);
+    this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(destination | 0);
+    this.write0OffsetLowRegister(destination | 0);
 }
-THUMBInstructionSet.prototype.TST = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.TST = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND:
     var result = source & destination;
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
 }
-THUMBInstructionSet.prototype.NEG = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    parentObj.CPSR.setOverflow((source ^ (-(source | 0))) == 0);
+THUMBInstructionSet.prototype.NEG = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    this.CPSR.setOverflow((source ^ (-(source | 0))) == 0);
     //Perform Subtraction:
     source = (-(source | 0)) | 0;
-    parentObj.CPSR.setNegativeInt(source | 0);
-    parentObj.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNegativeInt(source | 0);
+    this.CPSR.setZeroInt(source | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(source | 0);
+    this.write0OffsetLowRegister(source | 0);
 }
-THUMBInstructionSet.prototype.CMP = function (parentObj) {
+THUMBInstructionSet.prototype.CMP = function () {
     //Compare two registers:
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
+    this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.CMN = function (parentObj) {
+THUMBInstructionSet.prototype.CMN = function () {
     //Compare two registers:
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
-    parentObj.CPSR.setCMNFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
+    this.CPSR.setCMNFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.ORR = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ORR = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise OR:
     var result = source | destination;
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(result | 0);
+    this.write0OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.MUL = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.MUL = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform MUL32:
-    var result = parentObj.CPUCore.performMUL32(source | 0, destination | 0, 0) | 0;
-    parentObj.CPSR.setCarryFalse();
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    var result = this.CPUCore.performMUL32(source | 0, destination | 0, 0) | 0;
+    this.CPSR.setCarryFalse();
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(result | 0);
+    this.write0OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.BIC = function (parentObj) {
-    var source = parentObj.read3OffsetLowRegister() | 0;
-    var destination = parentObj.read0OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.BIC = function () {
+    var source = this.read3OffsetLowRegister() | 0;
+    var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND with a bitwise NOT on source:
     var result = (~source) & destination;
-    parentObj.CPSR.setNegativeInt(result | 0);
-    parentObj.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNegativeInt(result | 0);
+    this.CPSR.setZeroInt(result | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(result | 0);
+    this.write0OffsetLowRegister(result | 0);
 }
-THUMBInstructionSet.prototype.MVN = function (parentObj) {
+THUMBInstructionSet.prototype.MVN = function () {
     //Perform bitwise NOT on source:
-    var source = ~parentObj.read3OffsetLowRegister();
-    parentObj.CPSR.setNegativeInt(source | 0);
-    parentObj.CPSR.setZeroInt(source | 0);
+    var source = ~this.read3OffsetLowRegister();
+    this.CPSR.setNegativeInt(source | 0);
+    this.CPSR.setZeroInt(source | 0);
     //Update destination register:
-    parentObj.write0OffsetLowRegister(source | 0);
+    this.write0OffsetLowRegister(source | 0);
 }
-THUMBInstructionSet.prototype.ADDH_LL = function (parentObj) {
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ADDH_LH = function () {
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.readHighRegister(this.execute >> 3) | 0;
     //Perform Addition:
     //Update destination register:
-    parentObj.write0OffsetLowRegister(((operand1 | 0) + (operand2 | 0)) | 0);
+    this.write0OffsetLowRegister(((operand1 | 0) + (operand2 | 0)) | 0);
 }
-THUMBInstructionSet.prototype.ADDH_LH = function (parentObj) {
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.readHighRegister(parentObj.execute >> 3) | 0;
+THUMBInstructionSet.prototype.ADDH_HL = function () {
+    var operand1 = this.readHighRegister(this.execute | 0) | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
     //Perform Addition:
     //Update destination register:
-    parentObj.write0OffsetLowRegister(((operand1 | 0) + (operand2 | 0)) | 0);
+    this.guardHighRegisterWrite(((operand1 | 0) + (operand2 | 0)) | 0);
 }
-THUMBInstructionSet.prototype.ADDH_HL = function (parentObj) {
-    var operand1 = parentObj.readHighRegister(parentObj.execute | 0) | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
+THUMBInstructionSet.prototype.ADDH_HH = function () {
+    var operand1 = this.readHighRegister(this.execute | 0) | 0;
+    var operand2 = this.readHighRegister(this.execute >> 3) | 0;
     //Perform Addition:
     //Update destination register:
-    parentObj.guardHighRegisterWrite(((operand1 | 0) + (operand2 | 0)) | 0);
+    this.guardHighRegisterWrite(((operand1 | 0) + (operand2 | 0)) | 0);
 }
-THUMBInstructionSet.prototype.ADDH_HH = function (parentObj) {
-    var operand1 = parentObj.readHighRegister(parentObj.execute | 0) | 0;
-    var operand2 = parentObj.readHighRegister(parentObj.execute >> 3) | 0;
-    //Perform Addition:
-    //Update destination register:
-    parentObj.guardHighRegisterWrite(((operand1 | 0) + (operand2 | 0)) | 0);
-}
-THUMBInstructionSet.prototype.CMPH_LL = function (parentObj) {
+THUMBInstructionSet.prototype.CMPH_LH = function () {
     //Compare two registers:
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.read0OffsetLowRegister() | 0;
+    var operand2 = this.readHighRegister(this.execute >> 3) | 0;
+    this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.CMPH_LH = function (parentObj) {
+THUMBInstructionSet.prototype.CMPH_HL = function () {
     //Compare two registers:
-    var operand1 = parentObj.read0OffsetLowRegister() | 0;
-    var operand2 = parentObj.readHighRegister(parentObj.execute >> 3) | 0;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.readHighRegister(this.execute | 0) | 0;
+    var operand2 = this.read3OffsetLowRegister() | 0;
+    this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.CMPH_HL = function (parentObj) {
+THUMBInstructionSet.prototype.CMPH_HH = function () {
     //Compare two registers:
-    var operand1 = parentObj.readHighRegister(parentObj.execute | 0) | 0;
-    var operand2 = parentObj.read3OffsetLowRegister() | 0;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    var operand1 = this.readHighRegister(this.execute | 0) | 0;
+    var operand2 = this.readHighRegister(this.execute >> 3) | 0;
+    this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
 }
-THUMBInstructionSet.prototype.CMPH_HH = function (parentObj) {
-    //Compare two registers:
-    var operand1 = parentObj.readHighRegister(parentObj.execute | 0) | 0;
-    var operand2 = parentObj.readHighRegister(parentObj.execute >> 3) | 0;
-    parentObj.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
-}
-THUMBInstructionSet.prototype.MOVH_LL = function (parentObj) {
+THUMBInstructionSet.prototype.MOVH_LH = function () {
     //Move a register to another register:
-    parentObj.write0OffsetLowRegister(parentObj.read3OffsetLowRegister() | 0);
+    this.write0OffsetLowRegister(this.readHighRegister(this.execute >> 3) | 0);
 }
-THUMBInstructionSet.prototype.MOVH_LH = function (parentObj) {
+THUMBInstructionSet.prototype.MOVH_HL = function () {
     //Move a register to another register:
-    parentObj.write0OffsetLowRegister(parentObj.readHighRegister(parentObj.execute >> 3) | 0);
+    this.guardHighRegisterWrite(this.read3OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.MOVH_HL = function (parentObj) {
+THUMBInstructionSet.prototype.MOVH_HH = function () {
     //Move a register to another register:
-    parentObj.guardHighRegisterWrite(parentObj.read3OffsetLowRegister() | 0);
+    this.guardHighRegisterWrite(this.readHighRegister(this.execute >> 3) | 0);
 }
-THUMBInstructionSet.prototype.MOVH_HH = function (parentObj) {
-    //Move a register to another register:
-    parentObj.guardHighRegisterWrite(parentObj.readHighRegister(parentObj.execute >> 3) | 0);
-}
-THUMBInstructionSet.prototype.BX_L = function (parentObj) {
+THUMBInstructionSet.prototype.BX_L = function () {
     //Branch & eXchange:
-    var address = parentObj.read3OffsetLowRegister() | 0;
+    var address = this.read3OffsetLowRegister() | 0;
     if ((address & 0x1) == 0) {
         //Enter ARM mode:
-        parentObj.CPUCore.enterARM();
-        parentObj.CPUCore.branch(address & -0x4);
+        this.CPUCore.enterARM();
+        this.CPUCore.branch(address & -0x4);
     }
     else {
         //Stay in THUMB mode:
-        parentObj.CPUCore.branch(address & -0x2);
+        this.CPUCore.branch(address & -0x2);
     }
 }
-THUMBInstructionSet.prototype.BX_H = function (parentObj) {
+THUMBInstructionSet.prototype.BX_H = function () {
     //Branch & eXchange:
-    var address = parentObj.readHighRegister(parentObj.execute >> 3) | 0;
+    var address = this.readHighRegister(this.execute >> 3) | 0;
     if ((address & 0x1) == 0) {
         //Enter ARM mode:
-        parentObj.CPUCore.enterARM();
-        parentObj.CPUCore.branch(address & -0x4);
+        this.CPUCore.enterARM();
+        this.CPUCore.branch(address & -0x4);
     }
     else {
         //Stay in THUMB mode:
-        parentObj.CPUCore.branch(address & -0x2);
+        this.CPUCore.branch(address & -0x2);
     }
 }
-THUMBInstructionSet.prototype.LDRPC = function (parentObj) {
+THUMBInstructionSet.prototype.LDRPC = function () {
     //PC-Relative Load
-    var data = parentObj.CPUCore.read32(((parentObj.readPC() & -3) + ((parentObj.execute & 0xFF) << 2)) | 0) | 0;
-    parentObj.write8OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read32(((this.readPC() & -3) + ((this.execute & 0xFF) << 2)) | 0) | 0;
+    this.write8OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.STRreg = function (parentObj) {
+THUMBInstructionSet.prototype.STRreg = function () {
     //Store Word From Register
-    var address = ((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write32(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write32(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.STRHreg = function (parentObj) {
+THUMBInstructionSet.prototype.STRHreg = function () {
     //Store Half-Word From Register
-    var address = ((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write16(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write16(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.STRBreg = function (parentObj) {
+THUMBInstructionSet.prototype.STRBreg = function () {
     //Store Byte From Register
-    var address = ((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write8(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write8(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.LDRSBreg = function (parentObj) {
+THUMBInstructionSet.prototype.LDRSBreg = function () {
     //Load Signed Byte Into Register
-    var data = (parentObj.CPUCore.read8(((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0) << 24) >> 24;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = (this.CPUCore.read8(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) << 24) >> 24;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.LDRreg = function (parentObj) {
+THUMBInstructionSet.prototype.LDRreg = function () {
     //Load Word Into Register
-    var data = parentObj.CPUCore.read32(((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read32(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.LDRHreg = function (parentObj) {
+THUMBInstructionSet.prototype.LDRHreg = function () {
     //Load Half-Word Into Register
-    var data = parentObj.CPUCore.read16(((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read16(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.LDRBreg = function (parentObj) {
+THUMBInstructionSet.prototype.LDRBreg = function () {
     //Load Byte Into Register
-    var data = parentObj.CPUCore.read8(((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read8(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.LDRSHreg = function (parentObj) {
+THUMBInstructionSet.prototype.LDRSHreg = function () {
     //Load Signed Half-Word Into Register
-    var data = (parentObj.CPUCore.read16(((parentObj.read6OffsetLowRegister() | 0) + (parentObj.read3OffsetLowRegister() | 0)) | 0) << 16) >> 16;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = (this.CPUCore.read16(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) << 16) >> 16;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.STRimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.STRimm5 = function () {
     //Store Word From Register
-    var address = (((parentObj.execute >> 4) & 0x7C) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write32(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = (((this.execute >> 4) & 0x7C) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write32(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.LDRimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.LDRimm5 = function () {
     //Load Word Into Register
-    var data = parentObj.CPUCore.read32((((parentObj.execute >> 4) & 0x7C) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read32((((this.execute >> 4) & 0x7C) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.STRBimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.STRBimm5 = function () {
     //Store Byte From Register
-    var address = (((parentObj.execute >> 6) & 0x1F) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write8(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = (((this.execute >> 6) & 0x1F) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write8(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.LDRBimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.LDRBimm5 = function () {
     //Load Byte Into Register
-    var data = parentObj.CPUCore.read8((((parentObj.execute >> 6) & 0x1F) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read8((((this.execute >> 6) & 0x1F) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.STRHimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.STRHimm5 = function () {
     //Store Half-Word From Register
-    var address = (((parentObj.execute >> 5) & 0x3E) + (parentObj.read3OffsetLowRegister() | 0)) | 0;
-    parentObj.CPUCore.write16(address | 0, parentObj.read0OffsetLowRegister() | 0);
+    var address = (((this.execute >> 5) & 0x3E) + (this.read3OffsetLowRegister() | 0)) | 0;
+    this.CPUCore.write16(address | 0, this.read0OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.LDRHimm5 = function (parentObj) {
+THUMBInstructionSet.prototype.LDRHimm5 = function () {
     //Load Half-Word Into Register
-    var data = parentObj.CPUCore.read16((((parentObj.execute >> 5) & 0x3E) + (parentObj.read3OffsetLowRegister() | 0)) | 0) | 0;
-    parentObj.write0OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read16((((this.execute >> 5) & 0x3E) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
+    this.write0OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.STRSP = function (parentObj) {
+THUMBInstructionSet.prototype.STRSP = function () {
     //Store Word From Register
-    var address = (((parentObj.execute & 0xFF) << 2) + (parentObj.readSP() | 0)) | 0;
-    parentObj.CPUCore.write32(address | 0, parentObj.read8OffsetLowRegister() | 0);
+    var address = (((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0;
+    this.CPUCore.write32(address | 0, this.read8OffsetLowRegister() | 0);
 }
-THUMBInstructionSet.prototype.LDRSP = function (parentObj) {
+THUMBInstructionSet.prototype.LDRSP = function () {
     //Load Word Into Register
-    var data = parentObj.CPUCore.read32((((parentObj.execute & 0xFF) << 2) + (parentObj.readSP() | 0)) | 0) | 0;
-    parentObj.write8OffsetLowRegister(data | 0);
+    var data = this.CPUCore.read32((((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0) | 0;
+    this.write8OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.ADDPC = function (parentObj) {
+THUMBInstructionSet.prototype.ADDPC = function () {
     //Add PC With Offset Into Register
-    var data = ((parentObj.readPC() & -3) + ((parentObj.execute & 0xFF) << 2)) | 0;
-    parentObj.write8OffsetLowRegister(data | 0);
+    var data = ((this.readPC() & -3) + ((this.execute & 0xFF) << 2)) | 0;
+    this.write8OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.ADDSP = function (parentObj) {
+THUMBInstructionSet.prototype.ADDSP = function () {
     //Add SP With Offset Into Register
-    var data = (((parentObj.execute & 0xFF) << 2) + (parentObj.readSP() | 0)) | 0;
-    parentObj.write8OffsetLowRegister(data | 0);
+    var data = (((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0;
+    this.write8OffsetLowRegister(data | 0);
 }
-THUMBInstructionSet.prototype.ADDSPimm7 = function (parentObj) {
+THUMBInstructionSet.prototype.ADDSPimm7 = function () {
     //Add Signed Offset Into SP
-    if ((parentObj.execute & 0x80) != 0) {
-        parentObj.writeSP(((parentObj.readSP() | 0) - ((parentObj.execute & 0x7F) << 2)) | 0);
+    if ((this.execute & 0x80) != 0) {
+        this.writeSP(((this.readSP() | 0) - ((this.execute & 0x7F) << 2)) | 0);
     }
     else {
-        parentObj.writeSP(((parentObj.readSP() | 0) + ((parentObj.execute & 0x7F) << 2)) | 0);
+        this.writeSP(((this.readSP() | 0) + ((this.execute & 0x7F) << 2)) | 0);
     }
 }
-THUMBInstructionSet.prototype.PUSH = function (parentObj) {
+THUMBInstructionSet.prototype.PUSH = function () {
     //Only initialize the PUSH sequence if the register list is non-empty:
-    if ((parentObj.execute & 0xFF) > 0) {
+    if ((this.execute & 0xFF) > 0) {
         //Updating the address bus away from PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
         //Push register(s) onto the stack:
         for (var rListPosition = 7; (rListPosition | 0) > -1; rListPosition = ((rListPosition | 0) - 1) | 0) {
-            if ((parentObj.execute & (1 << rListPosition)) != 0) {
+            if ((this.execute & (1 << rListPosition)) != 0) {
                 //Push register onto the stack:
-                parentObj.SPDecrementWord();
-                parentObj.stackMemoryCache.memoryWrite32(parentObj.readSP() >>> 0, parentObj.readLowRegister(rListPosition | 0) | 0);
+                this.SPDecrementWord();
+                this.memory.memoryWrite32(this.readSP() | 0, this.readLowRegister(rListPosition | 0) | 0);
             }
         }
         //Updating the address bus back to PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
     }
 }
-THUMBInstructionSet.prototype.PUSHlr = function (parentObj) {
+THUMBInstructionSet.prototype.PUSHlr = function () {
     //Updating the address bus away from PC fetch:
-    parentObj.wait.NonSequentialBroadcast();
+    this.wait.NonSequentialBroadcast();
     //Push link register onto the stack:
-    parentObj.SPDecrementWord();
-    parentObj.stackMemoryCache.memoryWrite32(parentObj.readSP() >>> 0, parentObj.readLR() | 0);
+    this.SPDecrementWord();
+    this.memory.memoryWrite32(this.readSP() | 0, this.readLR() | 0);
     //Push register(s) onto the stack:
     for (var rListPosition = 7; (rListPosition | 0) > -1; rListPosition = ((rListPosition | 0) - 1) | 0) {
-        if ((parentObj.execute & (1 << rListPosition)) != 0) {
+        if ((this.execute & (1 << rListPosition)) != 0) {
             //Push register onto the stack:
-            parentObj.SPDecrementWord();
-            parentObj.stackMemoryCache.memoryWrite32(parentObj.readSP() >>> 0, parentObj.readLowRegister(rListPosition | 0) | 0);
+            this.SPDecrementWord();
+            this.memory.memoryWrite32(this.readSP() | 0, this.readLowRegister(rListPosition | 0) | 0);
         }
     }
     //Updating the address bus back to PC fetch:
-    parentObj.wait.NonSequentialBroadcast();
+    this.wait.NonSequentialBroadcast();
 }
-THUMBInstructionSet.prototype.POP = function (parentObj) {
+THUMBInstructionSet.prototype.POP = function () {
     //Only initialize the POP sequence if the register list is non-empty:
-    if ((parentObj.execute & 0xFF) > 0) {
+    if ((this.execute & 0xFF) > 0) {
         //Updating the address bus away from PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
         //POP stack into register(s):
         for (var rListPosition = 0; (rListPosition | 0) < 8; rListPosition = ((rListPosition | 0) + 1) | 0) {
-            if ((parentObj.execute & (1 << rListPosition)) != 0) {
+            if ((this.execute & (1 << rListPosition)) != 0) {
                 //POP stack into a register:
-                parentObj.writeLowRegister(rListPosition | 0, parentObj.stackMemoryCache.memoryRead32(parentObj.readSP() >>> 0) | 0);
-                parentObj.SPIncrementWord();
+                this.writeLowRegister(rListPosition | 0, this.memory.memoryRead32(this.readSP() | 0) | 0);
+                this.SPIncrementWord();
             }
         }
         //Updating the address bus back to PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
     }
 }
-THUMBInstructionSet.prototype.POPpc = function (parentObj) {
+THUMBInstructionSet.prototype.POPpc = function () {
     //Updating the address bus away from PC fetch:
-    parentObj.wait.NonSequentialBroadcast();
+    this.wait.NonSequentialBroadcast();
     //POP stack into register(s):
     for (var rListPosition = 0; (rListPosition | 0) < 8; rListPosition = ((rListPosition | 0) + 1) | 0) {
-        if ((parentObj.execute & (1 << rListPosition)) != 0) {
+        if ((this.execute & (1 << rListPosition)) != 0) {
             //POP stack into a register:
-            parentObj.writeLowRegister(rListPosition | 0, parentObj.stackMemoryCache.memoryRead32(parentObj.readSP() >>> 0) | 0);
-            parentObj.SPIncrementWord();
+            this.writeLowRegister(rListPosition | 0, this.memory.memoryRead32(this.readSP() | 0) | 0);
+            this.SPIncrementWord();
         }
     }
     //POP stack into the program counter (r15):
-    parentObj.writePC(parentObj.stackMemoryCache.memoryRead32(parentObj.readSP() >>> 0) | 0);
-    parentObj.SPIncrementWord();
+    this.writePC(this.memory.memoryRead32(this.readSP() | 0) | 0);
+    this.SPIncrementWord();
     //Updating the address bus back to PC fetch:
-    parentObj.wait.NonSequentialBroadcast();
+    this.wait.NonSequentialBroadcast();
 }
-THUMBInstructionSet.prototype.STMIA = function (parentObj) {
+THUMBInstructionSet.prototype.STMIA = function () {
     //Only initialize the STMIA sequence if the register list is non-empty:
-    if ((parentObj.execute & 0xFF) > 0) {
+    if ((this.execute & 0xFF) > 0) {
         //Get the base address:
-        var currentAddress = parentObj.read8OffsetLowRegister() | 0;
+        var currentAddress = this.read8OffsetLowRegister() | 0;
         //Updating the address bus away from PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
         //Push register(s) into memory:
         for (var rListPosition = 0; (rListPosition | 0) < 8; rListPosition = ((rListPosition | 0) + 1) | 0) {
-            if ((parentObj.execute & (1 << rListPosition)) != 0) {
+            if ((this.execute & (1 << rListPosition)) != 0) {
                 //Push a register into memory:
-                parentObj.stackMemoryCache.memoryWrite32(currentAddress >>> 0, parentObj.readLowRegister(rListPosition | 0) | 0);
+                this.memory.memoryWrite32(currentAddress | 0, this.readLowRegister(rListPosition | 0) | 0);
                 currentAddress = ((currentAddress | 0) + 4) | 0;
             }
         }
         //Store the updated base address back into register:
-        parentObj.write8OffsetLowRegister(currentAddress | 0);
+        this.write8OffsetLowRegister(currentAddress | 0);
         //Updating the address bus back to PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
     }
 }
-THUMBInstructionSet.prototype.LDMIA = function (parentObj) {
+THUMBInstructionSet.prototype.LDMIA = function () {
     //Only initialize the LDMIA sequence if the register list is non-empty:
-    if ((parentObj.execute & 0xFF) > 0) {
+    if ((this.execute & 0xFF) > 0) {
         //Get the base address:
-        var currentAddress = parentObj.read8OffsetLowRegister() | 0;
+        var currentAddress = this.read8OffsetLowRegister() | 0;
         //Updating the address bus away from PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
         //Load  register(s) from memory:
         for (var rListPosition = 0; (rListPosition | 0) < 8; rListPosition = ((rListPosition | 0) + 1) | 0) {
-            if ((parentObj.execute & (1 << rListPosition)) != 0) {
+            if ((this.execute & (1 << rListPosition)) != 0) {
                 //Load a register from memory:
-                parentObj.writeLowRegister(rListPosition | 0, parentObj.stackMemoryCache.memoryRead32(currentAddress >>> 0) | 0);
+                this.writeLowRegister(rListPosition | 0, this.memory.memoryRead32(currentAddress | 0) | 0);
                 currentAddress = ((currentAddress | 0) + 4) | 0;
             }
         }
         //Store the updated base address back into register:
-        parentObj.write8OffsetLowRegister(currentAddress | 0);
+        this.write8OffsetLowRegister(currentAddress | 0);
         //Updating the address bus back to PC fetch:
-        parentObj.wait.NonSequentialBroadcast();
+        this.wait.NonSequentialBroadcast();
     }
 }
-THUMBInstructionSet.prototype.BEQ = function (parentObj) {
+THUMBInstructionSet.prototype.BEQ = function () {
     //Branch if EQual:
-    if (parentObj.CPSR.getZero()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getZero()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BNE = function (parentObj) {
+THUMBInstructionSet.prototype.BNE = function () {
     //Branch if Not Equal:
-    if (!parentObj.CPSR.getZero()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getZero()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BCS = function (parentObj) {
+THUMBInstructionSet.prototype.BCS = function () {
     //Branch if Carry Set:
-    if (parentObj.CPSR.getCarry()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getCarry()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BCC = function (parentObj) {
+THUMBInstructionSet.prototype.BCC = function () {
     //Branch if Carry Clear:
-    if (!parentObj.CPSR.getCarry()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getCarry()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BMI = function (parentObj) {
+THUMBInstructionSet.prototype.BMI = function () {
     //Branch if Negative Set:
-    if (parentObj.CPSR.getNegative()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getNegative()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BPL = function (parentObj) {
+THUMBInstructionSet.prototype.BPL = function () {
     //Branch if Negative Clear:
-    if (!parentObj.CPSR.getNegative()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getNegative()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BVS = function (parentObj) {
+THUMBInstructionSet.prototype.BVS = function () {
     //Branch if Overflow Set:
-    if (parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BVC = function (parentObj) {
+THUMBInstructionSet.prototype.BVC = function () {
     //Branch if Overflow Clear:
-    if (!parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BHI = function (parentObj) {
+THUMBInstructionSet.prototype.BHI = function () {
     //Branch if Carry & Non-Zero:
-    if (parentObj.CPSR.getCarry() && !parentObj.CPSR.getZero()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getCarry() && !this.CPSR.getZero()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BLS = function (parentObj) {
+THUMBInstructionSet.prototype.BLS = function () {
     //Branch if Carry Clear or is Zero Set:
-    if (!parentObj.CPSR.getCarry() || parentObj.CPSR.getZero()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getCarry() || this.CPSR.getZero()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BGE = function (parentObj) {
+THUMBInstructionSet.prototype.BGE = function () {
     //Branch if Negative equal to Overflow
-    if (parentObj.CPSR.getNegative() == parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getNegative() == this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BLT = function (parentObj) {
+THUMBInstructionSet.prototype.BLT = function () {
     //Branch if Negative NOT equal to Overflow
-    if (parentObj.CPSR.getNegative() != parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getNegative() != this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BGT = function (parentObj) {
+THUMBInstructionSet.prototype.BGT = function () {
     //Branch if Zero Clear and Negative equal to Overflow
-    if (!parentObj.CPSR.getZero() && parentObj.CPSR.getNegative() == parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (!this.CPSR.getZero() && this.CPSR.getNegative() == this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.BLE = function (parentObj) {
+THUMBInstructionSet.prototype.BLE = function () {
     //Branch if Zero Set or Negative NOT equal to Overflow
-    if (parentObj.CPSR.getZero() || parentObj.CPSR.getNegative() != parentObj.CPSR.getOverflow()) {
-        parentObj.offsetPC();
+    if (this.CPSR.getZero() || this.CPSR.getNegative() != this.CPSR.getOverflow()) {
+        this.offsetPC();
     }
 }
-THUMBInstructionSet.prototype.SWI = function (parentObj) {
+THUMBInstructionSet.prototype.SWI = function () {
     //Software Interrupt:
-    parentObj.CPUCore.SWI();
+    this.CPUCore.SWI();
 }
-THUMBInstructionSet.prototype.B = function (parentObj) {
+THUMBInstructionSet.prototype.B = function () {
     //Unconditional Branch:
     //Update the program counter to branch address:
-    parentObj.CPUCore.branch(((parentObj.readPC() | 0) + ((parentObj.execute << 21) >> 20)) | 0);
+    this.CPUCore.branch(((this.readPC() | 0) + ((this.execute << 21) >> 20)) | 0);
 }
-THUMBInstructionSet.prototype.BLsetup = function (parentObj) {
+THUMBInstructionSet.prototype.BLsetup = function () {
     //Brank with Link (High offset)
     //Update the link register to branch address:
-    parentObj.writeLR(((parentObj.readPC() | 0) + (((parentObj.execute & 0x7FF) << 21) >> 9)) | 0);
+    this.writeLR(((this.readPC() | 0) + (((this.execute & 0x7FF) << 21) >> 9)) | 0);
 }
-THUMBInstructionSet.prototype.BLoff = function (parentObj) {
+THUMBInstructionSet.prototype.BLoff = function () {
     //Brank with Link (Low offset)
     //Update the link register to branch address:
-    parentObj.writeLR(((parentObj.readLR() | 0) + ((parentObj.execute & 0x7FF) << 1)) | 0);
+    this.writeLR(((this.readLR() | 0) + ((this.execute & 0x7FF) << 1)) | 0);
     //Copy LR to PC:
-    var oldPC = parentObj.readPC() | 0;
+    var oldPC = this.readPC() | 0;
     //Flush Pipeline & Block PC Increment:
-    parentObj.CPUCore.branch(parentObj.readLR() & -0x2);
+    this.CPUCore.branch(this.readLR() & -0x2);
     //Set bit 0 of LR high:
-    parentObj.writeLR(((oldPC | 0) - 0x2) | 0x1);
+    this.writeLR(((oldPC | 0) - 0x2) | 0x1);
 }
-THUMBInstructionSet.prototype.UNDEFINED = function (parentObj) {
+THUMBInstructionSet.prototype.UNDEFINED = function () {
     //Undefined Exception:
-    parentObj.CPUCore.UNDEFINED();
+    this.CPUCore.UNDEFINED();
 }
-THUMBInstructionSet.prototype.compileInstructionMap = function () {
-    this.instructionMap = [];
+function compileTHUMBInstructionDecodeMap() {
+    var opcodeIndice = 0;
+    var instructionMap = getUint8Array(1024);
+    function generateLowMap(instruction) {
+        for (var index = 0; index < 0x20; ++index) {
+            instructionMap[opcodeIndice++] = instruction;
+        }
+    }
+    function generateLowMap2(instruction) {
+        for (var index = 0; index < 0x8; ++index) {
+            instructionMap[opcodeIndice++] = instruction;
+        }
+    }
+    function generateLowMap3(instruction) {
+        for (var index = 0; index < 0x4; ++index) {
+            instructionMap[opcodeIndice++] = instruction;
+        }
+    }
+    function generateLowMap4(instruction1, instruction2, instruction3, instruction4) {
+        instructionMap[opcodeIndice++] = instruction1;
+        instructionMap[opcodeIndice++] = instruction2;
+        instructionMap[opcodeIndice++] = instruction3;
+        instructionMap[opcodeIndice++] = instruction4;
+    }
     //0-7
-    this.generateLowMap(this.LSLimm);
+    generateLowMap(6);
     //8-F
-    this.generateLowMap(this.LSRimm);
+    generateLowMap(7);
     //10-17
-    this.generateLowMap(this.ASRimm);
+    generateLowMap(30);
     //18-19
-    this.generateLowMap2(this.ADDreg);
+    generateLowMap2(12);
     //1A-1B
-    this.generateLowMap2(this.SUBreg);
+    generateLowMap2(18);
     //1C-1D
-    this.generateLowMap2(this.ADDimm3);
+    generateLowMap2(11);
     //1E-1F
-    this.generateLowMap2(this.SUBimm3);
+    generateLowMap2(60);
     //20-27
-    this.generateLowMap(this.MOVimm8);
+    generateLowMap(8);
     //28-2F
-    this.generateLowMap(this.CMPimm8);
+    generateLowMap(0);
     //30-37
-    this.generateLowMap(this.ADDimm8);
+    generateLowMap(17);
     //38-3F
-    this.generateLowMap(this.SUBimm8);
+    generateLowMap(42);
     //40
-    this.generateLowMap4(this.AND, this.EOR, this.LSL, this.LSR);
+    generateLowMap4(4, 59, 55, 57);
     //41
-    this.generateLowMap4(this.ASR, this.ADC, this.SBC, this.ROR);
+    generateLowMap4(69, 71, 72, 43);
     //42
-    this.generateLowMap4(this.TST, this.NEG, this.CMP, this.CMN);
+    generateLowMap4(48, 46, 9, 75);
     //43
-    this.generateLowMap4(this.ORR, this.MUL, this.BIC, this.MVN);
+    generateLowMap4(21, 31, 66, 68);
     //44
-    this.generateLowMap4(this.ADDH_LL, this.ADDH_LH, this.ADDH_HL, this.ADDH_HH);
+    generateLowMap4(82, 61, 27, 77);
     //45
-    this.generateLowMap4(this.CMPH_LL, this.CMPH_LH, this.CMPH_HL, this.CMPH_HH);
+    generateLowMap4(82, 58, 63, 78);
     //46
-    this.generateLowMap4(this.MOVH_LL, this.MOVH_LH, this.MOVH_HL, this.MOVH_HH);
+    generateLowMap4(82, 2, 16, 54);
     //47
-    this.generateLowMap4(this.BX_L, this.BX_H, this.BX_L, this.BX_H);
+    generateLowMap4(37, 49, 82, 82);
     //48-4F
-    this.generateLowMap(this.LDRPC);
+    generateLowMap(15);
     //50-51
-    this.generateLowMap2(this.STRreg);
+    generateLowMap2(74);
     //52-53
-    this.generateLowMap2(this.STRHreg);
+    generateLowMap2(35);
     //54-55
-    this.generateLowMap2(this.STRBreg);
+    generateLowMap2(79);
     //56-57
-    this.generateLowMap2(this.LDRSBreg);
+    generateLowMap2(65);
     //58-59
-    this.generateLowMap2(this.LDRreg);
+    generateLowMap2(70);
     //5A-5B
-    this.generateLowMap2(this.LDRHreg);
+    generateLowMap2(36);
     //5C-5D
-    this.generateLowMap2(this.LDRBreg);
+    generateLowMap2(76);
     //5E-5F
-    this.generateLowMap2(this.LDRSHreg);
+    generateLowMap2(44);
     //60-67
-    this.generateLowMap(this.STRimm5);
+    generateLowMap(20);
     //68-6F
-    this.generateLowMap(this.LDRimm5);
+    generateLowMap(3);
     //70-77
-    this.generateLowMap(this.STRBimm5);
+    generateLowMap(45);
     //78-7F
-    this.generateLowMap(this.LDRBimm5);
+    generateLowMap(5);
     //80-87
-    this.generateLowMap(this.STRHimm5);
+    generateLowMap(28);
     //88-8F
-    this.generateLowMap(this.LDRHimm5);
+    generateLowMap(22);
     //90-97
-    this.generateLowMap(this.STRSP);
+    generateLowMap(13);
     //98-9F
-    this.generateLowMap(this.LDRSP);
+    generateLowMap(10);
     //A0-A7
-    this.generateLowMap(this.ADDPC);
+    generateLowMap(64);
     //A8-AF
-    this.generateLowMap(this.ADDSP);
+    generateLowMap(67);
     //B0
-    this.generateLowMap3(this.ADDSPimm7);
+    generateLowMap3(39);
     //B1
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B2
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B3
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B4
-    this.generateLowMap3(this.PUSH);
+    generateLowMap3(41);
     //B5
-    this.generateLowMap3(this.PUSHlr);
+    generateLowMap3(40);
     //B6
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B7
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B8
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //B9
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //BA
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //BB
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //BC
-    this.generateLowMap3(this.POP);
+    generateLowMap3(26);
     //BD
-    this.generateLowMap3(this.POPpc);
+    generateLowMap3(56);
     //BE
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //BF
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //C0-C7
-    this.generateLowMap(this.STMIA);
+    generateLowMap(50);
     //C8-CF
-    this.generateLowMap(this.LDMIA);
+    generateLowMap(53);
     //D0
-    this.generateLowMap3(this.BEQ);
+    generateLowMap3(1);
     //D1
-    this.generateLowMap3(this.BNE);
+    generateLowMap3(24);
     //D2
-    this.generateLowMap3(this.BCS);
+    generateLowMap3(23);
     //D3
-    this.generateLowMap3(this.BCC);
+    generateLowMap3(19);
     //D4
-    this.generateLowMap3(this.BMI);
+    generateLowMap3(73);
     //D5
-    this.generateLowMap3(this.BPL);
+    generateLowMap3(62);
     //D6
-    this.generateLowMap3(this.BVS);
+    generateLowMap3(80);
     //D7
-    this.generateLowMap3(this.BVC);
+    generateLowMap3(81);
     //D8
-    this.generateLowMap3(this.BHI);
+    generateLowMap3(47);
     //D9
-    this.generateLowMap3(this.BLS);
+    generateLowMap3(51);
     //DA
-    this.generateLowMap3(this.BGE);
+    generateLowMap3(25);
     //DB
-    this.generateLowMap3(this.BLT);
+    generateLowMap3(38);
     //DC
-    this.generateLowMap3(this.BGT);
+    generateLowMap3(34);
     //DD
-    this.generateLowMap3(this.BLE);
+    generateLowMap3(29);
     //DE
-    this.generateLowMap3(this.UNDEFINED);
+    generateLowMap3(82);
     //DF
-    this.generateLowMap3(this.SWI);
+    generateLowMap3(52);
     //E0-E7
-    this.generateLowMap(this.B);
+    generateLowMap(14);
     //E8-EF
-    this.generateLowMap(this.UNDEFINED);
+    generateLowMap(82);
     //F0-F7
-    this.generateLowMap(this.BLsetup);
+    generateLowMap(32);
     //F8-FF
-    this.generateLowMap(this.BLoff);
-    //Force length to be ready only:
-    try {
-        Object.defineProperty(this.instructionMap, "length", {writable: false});
-    }
-    catch (error) {
-        //Some browsers throw here....
-    }
+    generateLowMap(33);
+    //Set to prototype:
+    THUMBInstructionSet.prototype.instructionMap = instructionMap;
 }
-THUMBInstructionSet.prototype.generateLowMap = function (instruction) {
-    for (var index = 0; index < 0x20; ++index) {
-        this.instructionMap.push(instruction);
-    }
-}
-THUMBInstructionSet.prototype.generateLowMap2 = function (instruction) {
-    for (var index = 0; index < 0x8; ++index) {
-        this.instructionMap.push(instruction);
-    }
-}
-THUMBInstructionSet.prototype.generateLowMap3 = function (instruction) {
-    for (var index = 0; index < 0x4; ++index) {
-        this.instructionMap.push(instruction);
-    }
-}
-THUMBInstructionSet.prototype.generateLowMap4 = function (instruction1, instruction2, instruction3, instruction4) {
-    this.instructionMap.push(instruction1);
-    this.instructionMap.push(instruction2);
-    this.instructionMap.push(instruction3);
-    this.instructionMap.push(instruction4);
-}
+compileTHUMBInstructionDecodeMap();

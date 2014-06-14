@@ -22,7 +22,6 @@ function GameBoyAdvanceBGMatrixRenderer(gfx, BGLayer) {
     this.palette = this.gfx.palette256;
     this.transparency = this.gfx.transparency | 0;
     this.bgAffineRenderer = this.gfx.bgAffineRenderer[BGLayer & 0x1];
-    this.fetchTile = (Math.imul) ? this.fetchTileOptimized : this.fetchTileSlow;
     this.screenSizePreprocess();
     this.screenBaseBlockPreprocess();
     this.characterBaseBlockPreprocess();
@@ -32,18 +31,24 @@ GameBoyAdvanceBGMatrixRenderer.prototype.renderScanLine = function (line) {
     line = line | 0;
     return this.bgAffineRenderer.renderScanLine(line | 0, this);
 }
-GameBoyAdvanceBGMatrixRenderer.prototype.fetchTileSlow = function (x, y, mapSize) {
-    //Compute address for tile VRAM to address:
-    var tileNumber = x + (y * mapSize);
-    return this.VRAM[((tileNumber | 0) + (this.BGScreenBaseBlock | 0)) & 0xFFFF];
+if (!!Math.imul) {
+    //Math.imul found, insert the optimized path in:
+    GameBoyAdvanceBGMatrixRenderer.prototype.fetchTile = function (x, y, mapSize) {
+        //Compute address for tile VRAM to address:
+        x = x | 0;
+        y = y | 0;
+        mapSize = mapSize | 0;
+        var tileNumber = ((x | 0) + Math.imul(y | 0, mapSize | 0)) | 0;
+        return this.VRAM[((tileNumber | 0) + (this.BGScreenBaseBlock | 0)) & 0xFFFF] | 0;
+    }
 }
-GameBoyAdvanceBGMatrixRenderer.prototype.fetchTileOptimized = function (x, y, mapSize) {
-    //Compute address for tile VRAM to address:
-    x = x | 0;
-    y = y | 0;
-    mapSize = mapSize | 0;
-    var tileNumber = ((x | 0) + Math.imul(y | 0, mapSize | 0)) | 0;
-    return this.VRAM[((tileNumber | 0) + (this.BGScreenBaseBlock | 0)) & 0xFFFF] | 0;
+else {
+    //Math.imul not found, use the compatibility method:
+    GameBoyAdvanceBGMatrixRenderer.prototype.fetchTile = function (x, y, mapSize) {
+        //Compute address for tile VRAM to address:
+        var tileNumber = x + (y * mapSize);
+        return this.VRAM[((tileNumber | 0) + (this.BGScreenBaseBlock | 0)) & 0xFFFF];
+    }
 }
 GameBoyAdvanceBGMatrixRenderer.prototype.computeScreenAddress = function (x, y) {
     //Compute address for character VRAM to address:
