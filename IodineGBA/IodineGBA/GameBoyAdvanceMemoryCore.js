@@ -435,7 +435,6 @@ GameBoyAdvanceMemory.prototype.readBIOS8 = function (address) {
         this.IOCore.updateCoreSingle();
         if ((this.cpu.registers[15] | 0) < 0x4000) {
             //If reading from BIOS while executing it:
-            this.lastBIOSREAD = this.cpu.getCurrentFetchValue() | 0;
             data = this.BIOS[address & 0x3FFF] | 0;
         }
         else {
@@ -457,7 +456,6 @@ if (__LITTLE_ENDIAN__) {
             this.IOCore.updateCoreSingle();
             if ((this.cpu.registers[15] | 0) < 0x4000) {
                 //If reading from BIOS while executing it:
-                this.lastBIOSREAD = this.cpu.getCurrentFetchValue() | 0;
                 data = this.BIOS16[address & 0x1FFF] | 0;
             }
             else {
@@ -477,8 +475,8 @@ if (__LITTLE_ENDIAN__) {
             address >>= 1;
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
-            this.lastBIOSREAD = this.cpu.getCurrentFetchValue() | 0;
             data = this.BIOS16[address & 0x1FFF] | 0;
+            this.lastBIOSREAD = data | 0;
         }
         else {
             data = this.readUnused16CPU(address | 0) | 0;
@@ -493,7 +491,6 @@ if (__LITTLE_ENDIAN__) {
             this.IOCore.updateCoreSingle();
             if ((this.cpu.registers[15] | 0) < 0x4000) {
                 //If reading from BIOS while executing it:
-                this.lastBIOSREAD = this.cpu.getCurrentFetchValue() | 0;
                 data = this.BIOS32[address & 0xFFF] | 0;
             }
             else {
@@ -513,8 +510,8 @@ if (__LITTLE_ENDIAN__) {
             address >>= 2;
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
-            this.lastBIOSREAD = this.cpu.getCurrentFetchValue() | 0;
             data = this.BIOS32[address & 0xFFF] | 0;
+            this.lastBIOSREAD = data | 0;
         }
         else {
             data = this.readUnused32CPU(address | 0) | 0;
@@ -529,12 +526,11 @@ else {
             this.IOCore.updateCoreSingle();
             if (this.cpu.registers[15] < 0x4000) {
                 //If reading from BIOS while executing it:
-                this.lastBIOSREAD = this.cpu.getCurrentFetchValue();
                 return this.BIOS[address] | (this.BIOS[address | 1] << 8);
             }
             else {
                 //Not allowed to read from BIOS while executing outside of it:
-                return (this.lastBIOSREAD >> ((address & 0x1) << 4)) & 0xFFFF;
+                return (this.lastBIOSREAD >> ((address & 0x2) << 3)) & 0xFFFF;
             }
         }
         else {
@@ -546,8 +542,9 @@ else {
         if ((address | 0) < 0x4000) {
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
-            this.lastBIOSREAD = this.cpu.getCurrentFetchValue();
-            return this.BIOS[address] | (this.BIOS[address | 1] << 8);
+            var data = this.BIOS[address] | (this.BIOS[address | 1] << 8);
+            this.lastBIOSREAD = data;
+            return data;
         }
         else {
             return this.readUnused16CPU(address);
@@ -559,7 +556,6 @@ else {
             this.IOCore.updateCoreSingle();
             if (this.cpu.registers[15] < 0x4000) {
                 //If reading from BIOS while executing it:
-                this.lastBIOSREAD = this.cpu.getCurrentFetchValue();
                 return this.BIOS[address] | (this.BIOS[address | 1] << 8) | (this.BIOS[address | 2] << 16)  | (this.BIOS[address | 3] << 24);
             }
             else {
@@ -576,8 +572,9 @@ else {
         if ((address | 0) < 0x4000) {
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
-            this.lastBIOSREAD = this.cpu.getCurrentFetchValue();
-            return this.BIOS[address] | (this.BIOS[address | 1] << 8) | (this.BIOS[address | 2] << 16)  | (this.BIOS[address | 3] << 24);
+            var data = this.BIOS[address] | (this.BIOS[address | 1] << 8) | (this.BIOS[address | 2] << 16)  | (this.BIOS[address | 3] << 24);
+            this.lastBIOSREAD = data;
+            return data;
         }
         else {
             return this.readUnused32CPU(address);
@@ -936,25 +933,51 @@ GameBoyAdvanceMemory.prototype.readSRAM8 = function (address) {
     this.wait.SRAMAccess();
     return this.saves.readSRAM(address & 0xFFFF) | 0;
 }
-GameBoyAdvanceMemory.prototype.readSRAM16 = function (address) {
-    address = address | 0;
-    this.wait.SRAMAccess();
-    return ((this.saves.readSRAM(address & 0xFFFE) | 0) * 0x101) | 0;
+if (!!Math.imul) {
+    //Math.imul found, insert the optimized path in:
+    GameBoyAdvanceMemory.prototype.readSRAM16 = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccess();
+        return Math.imul(this.saves.readSRAM(address & 0xFFFE) | 0, 0x101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM16CPU = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccessCPU();
+        return Math.imul(this.saves.readSRAM(address & 0xFFFE) | 0, 0x101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM32 = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccess();
+        return Math.imul(this.saves.readSRAM(address & 0xFFFC) | 0, 0x1010101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM32CPU = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccessCPU();
+        return Math.imul(this.saves.readSRAM(address & 0xFFFC) | 0, 0x1010101) | 0;
+    }
 }
-GameBoyAdvanceMemory.prototype.readSRAM16CPU = function (address) {
-    address = address | 0;
-    this.wait.SRAMAccessCPU();
-    return ((this.saves.readSRAM(address & 0xFFFE) | 0) * 0x101) | 0;
-}
-GameBoyAdvanceMemory.prototype.readSRAM32 = function (address) {
-    address = address | 0;
-    this.wait.SRAMAccess();
-    return ((this.saves.readSRAM(address & 0xFFFC) | 0) * 0x1010101) | 0;
-}
-GameBoyAdvanceMemory.prototype.readSRAM32CPU = function (address) {
-    address = address | 0;
-    this.wait.SRAMAccessCPU();
-    return ((this.saves.readSRAM(address & 0xFFFC) | 0) * 0x1010101) | 0;
+else {
+    //Math.imul not found, use the compatibility method:
+    GameBoyAdvanceMemory.prototype.readSRAM16 = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccess();
+        return ((this.saves.readSRAM(address & 0xFFFE) | 0) * 0x101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM16CPU = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccessCPU();
+        return ((this.saves.readSRAM(address & 0xFFFE) | 0) * 0x101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM32 = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccess();
+        return ((this.saves.readSRAM(address & 0xFFFC) | 0) * 0x1010101) | 0;
+    }
+    GameBoyAdvanceMemory.prototype.readSRAM32CPU = function (address) {
+        address = address | 0;
+        this.wait.SRAMAccessCPU();
+        return ((this.saves.readSRAM(address & 0xFFFC) | 0) * 0x1010101) | 0;
+    }
 }
 GameBoyAdvanceMemory.prototype.readZero = function (parentObj) {
     return 0;
@@ -1005,11 +1028,11 @@ GameBoyAdvanceMemory.prototype.readUnused32CPU = function (address) {
     return controller.getCurrentFetchValue() | 0;
 }
 GameBoyAdvanceMemory.prototype.readUnused0 = function (parentObj) {
-    var controller = ((this.IOCore.systemStatus | 0) == 0) ? parentObj.cpu : parentObj.dma;
+    var controller = ((parentObj.IOCore.systemStatus | 0) == 0) ? parentObj.cpu : parentObj.dma;
     return controller.getCurrentFetchValue() & 0xFF;
 }
 GameBoyAdvanceMemory.prototype.readUnused1 = function (parentObj) {
-    var controller = ((this.IOCore.systemStatus | 0) == 0) ? parentObj.cpu : parentObj.dma;
+    var controller = ((parentObj.IOCore.systemStatus | 0) == 0) ? parentObj.cpu : parentObj.dma;
     return (controller.getCurrentFetchValue() >> 8) & 0xFF;
 }
 GameBoyAdvanceMemory.prototype.readUnused2 = function (parentObj) {
