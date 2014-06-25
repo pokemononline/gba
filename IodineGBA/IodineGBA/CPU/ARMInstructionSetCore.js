@@ -257,10 +257,10 @@ ARMInstructionSet.prototype.guardUserRegisterWriteLDM = function (address, data)
         this.guardProgramCounterRegisterWriteCPSR(data | 0);
     }
 }
-ARMInstructionSet.prototype.baseRegisterWrite = function (address, data, userMode) {
+ARMInstructionSet.prototype.baseRegisterWrite = function (data, userMode) {
     //Update writeback for offset+base modes:
-    address = address | 0;
     data = data | 0;
+    var address = (this.execute >> 16) & 0xF;
     if (!userMode || (address | 0) == 0xF) {
         this.guardRegisterWrite(address | 0, data | 0);
     }
@@ -364,61 +364,15 @@ ARMInstructionSet.prototype.guardUserRegisterReadSTM = function (address) {
         return this.readDelayedPCRegister() | 0;
     }
 }
-ARMInstructionSet.prototype.baseRegisterRead = function (address, userMode) {
+ARMInstructionSet.prototype.baseRegisterRead = function (userMode) {
     //Read specially for offset+base modes:
-    address = address | 0;
+    var address = (this.execute >> 16) & 0xF;
     if (!userMode || (address | 0) == 0xF) {
         return this.readRegister(address | 0) | 0;
     }
     else {
         return this.guardUserRegisterRead(address | 0) | 0;
     }
-}
-ARMInstructionSet.prototype.updateBasePostDecrement = function (offset, userMode) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.baseRegisterRead(baseRegisterNumber | 0, userMode) | 0;
-    var result = ((base | 0) - (offset | 0)) | 0;
-    this.baseRegisterWrite(baseRegisterNumber | 0, result | 0, userMode);
-    return base | 0;
-}
-ARMInstructionSet.prototype.updateBasePostIncrement = function (offset, userMode) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.baseRegisterRead(baseRegisterNumber | 0, userMode) | 0;
-    var result = ((base | 0) + (offset | 0)) | 0;
-    this.baseRegisterWrite(baseRegisterNumber | 0, result | 0, userMode);
-    return base | 0;
-}
-ARMInstructionSet.prototype.updateNoBaseDecrement = function (offset) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.registers[baseRegisterNumber | 0] | 0;
-    var result = ((base | 0) - (offset | 0)) | 0;
-    return result | 0;
-}
-ARMInstructionSet.prototype.updateNoBaseIncrement = function (offset) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.registers[baseRegisterNumber | 0] | 0;
-    var result = ((base | 0) + (offset | 0)) | 0;
-    return result | 0;
-}
-ARMInstructionSet.prototype.updateBasePreDecrement = function (offset) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.registers[baseRegisterNumber | 0] | 0;
-    var result = ((base | 0) - (offset | 0)) | 0;
-    this.guardRegisterWrite(baseRegisterNumber | 0, result | 0);
-    return result | 0;
-}
-ARMInstructionSet.prototype.updateBasePreIncrement = function (offset) {
-    offset = offset | 0;
-    var baseRegisterNumber = (this.execute >> 16) & 0xF;
-    var base = this.registers[baseRegisterNumber | 0] | 0;
-    var result = ((base | 0) + (offset | 0)) | 0;
-    this.guardRegisterWrite(baseRegisterNumber | 0, result | 0);
-    return result | 0;
 }
 ARMInstructionSet.prototype.BX = function () {
     //Branch & eXchange:
@@ -2011,17 +1965,17 @@ ARMInstructionSet.prototype.UNDEFINED = function () {
 }
 ARMInstructionSet.prototype.operand2OP_DataProcessing1 = function () {
     var data = 0;
-    switch (this.execute & 0x2000060) {
+    switch ((this.execute & 0x2000060) >> 5) {
         case 0:
             data = this.lli() | 0;
             break;
-        case 0x20:
+        case 1:
             data = this.lri() | 0;
             break;
-        case 0x40:
+        case 2:
             data = this.ari() | 0;
             break;
-        case 0x60:
+        case 3:
             data = this.rri() | 0;
             break;
         default:
@@ -2031,17 +1985,17 @@ ARMInstructionSet.prototype.operand2OP_DataProcessing1 = function () {
 }
 ARMInstructionSet.prototype.operand2OP_DataProcessing2 = function () {
     var data = 0;
-    switch (this.execute & 0x2000060) {
+    switch ((this.execute & 0x2000060) >> 5) {
         case 0:
             data = this.llis() | 0;
             break;
-        case 0x20:
+        case 1:
             data = this.lris() | 0;
             break;
-        case 0x40:
+        case 2:
             data = this.aris() | 0;
             break;
-        case 0x60:
+        case 3:
             data = this.rris() | 0;
             break;
         default:
@@ -2112,28 +2066,27 @@ ARMInstructionSet.prototype.operand2OP_LoadStoreOperandDetermine = function () {
 }
 ARMInstructionSet.prototype.operand2OP_LoadStorePostT = function (offset, userMode) {
     offset = offset | 0;
+    var base = this.baseRegisterRead(userMode) | 0;
     if ((this.execute & 0x800000) == 0) {
-        offset = this.updateBasePostDecrement(offset | 0, userMode) | 0;
+        offset = ((base | 0) - (offset | 0)) | 0;
     }
     else {
-        offset = this.updateBasePostIncrement(offset | 0, userMode) | 0;
+        offset = ((base | 0) + (offset | 0)) | 0;
     }
-    return offset | 0;
+    this.baseRegisterWrite(offset | 0, userMode);
+    return base | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStoreNotT = function (offset) {
     offset = offset | 0;
-    switch (this.execute & 0xA00000) {
-        case 0:
-            offset = this.updateNoBaseDecrement(offset | 0) | 0;
-            break;
-        case 0x200000:
-            offset = this.updateBasePreDecrement(offset | 0) | 0;
-            break;
-        case 0x800000:
-            offset = this.updateNoBaseIncrement(offset | 0) | 0;
-            break;
-        default:
-            offset = this.updateBasePreIncrement(offset | 0) | 0;
+    var base = this.read16OffsetRegister() | 0;
+    if ((this.execute & 0x800000) == 0) {
+        offset = ((base | 0) - (offset | 0)) | 0;
+    }
+    else {
+        offset = ((base | 0) + (offset | 0)) | 0;
+    }
+    if ((this.execute & 0x200000) == 0x200000) {
+        this.guard16OffsetRegisterWrite(offset | 0);
     }
     return offset | 0;
 }
