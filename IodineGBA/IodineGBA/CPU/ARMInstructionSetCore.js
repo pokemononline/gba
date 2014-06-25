@@ -2100,6 +2100,16 @@ ARMInstructionSet.prototype.operand2OP_LoadStoreOffsetGen = function () {
     }
     return data | 0;
 }
+ARMInstructionSet.prototype.operand2OP_LoadStoreOperandDetermine = function () {
+    var offset = 0;
+    if ((this.execute & 0x400000) == 0) {
+        offset = this.readRegister(this.execute & 0xF) | 0;
+    }
+    else {
+        offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
+    }
+    return offset | 0;
+}
 ARMInstructionSet.prototype.operand2OP_LoadStorePostT = function (offset, userMode) {
     offset = offset | 0;
     if ((this.execute & 0x800000) == 0) {
@@ -2110,73 +2120,8 @@ ARMInstructionSet.prototype.operand2OP_LoadStorePostT = function (offset, userMo
     }
     return offset | 0;
 }
-ARMInstructionSet.prototype.operand2OP_LoadStore1 = function () {
-    var offset = 0;
-    if ((this.execute & 0x400000) == 0) {
-        offset = this.readRegister(this.execute & 0xF) | 0;
-    }
-    else {
-        offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    }
-    return this.operand2OP_LoadStorePostT(offset | 0, false) | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore2 = function () {
-    var data = 0;
-    switch ((this.execute >> 21) & 0x7) {
-        case 0:
-            data = this.ofrm() | 0;
-            break;
-        case 0x1:
-            data = this.prrm() | 0;
-            break;
-        case 0x2:
-            data = this.ofim() | 0;
-            break;
-        case 0x3:
-            data = this.prim() | 0;
-            break;
-        case 0x4:
-            data = this.ofrp() | 0;
-            break;
-        case 0x5:
-            data = this.prrp() | 0;
-            break;
-        case 0x6:
-            data = this.ofip() | 0;
-            break;
-        default:
-            data = this.prip() | 0;
-    }
-    return data | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
-    return this.operand2OP_LoadStorePostT(this.execute & 0xFFF, userMode) | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore4 = function () {
-    var data = 0;
-    switch ((this.execute >> 21) & 0x7) {
-        case 0:
-        case 0x2:
-            data = this.sofim() | 0;
-            break;
-        case 0x1:
-        case 0x3:
-            data = this.sprim() | 0;
-            break;
-        case 0x4:
-        case 0x6:
-            data = this.sofip() | 0;
-            break;
-        default:
-            data = this.sprip() | 0;
-    }
-    return data | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore5 = function (userMode) {
-    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOffsetGen() | 0, userMode) | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore6 = function () {
-    var offset = this.operand2OP_LoadStoreOffsetGen() | 0;
+ARMInstructionSet.prototype.operand2OP_LoadStoreNotT = function (offset) {
+    offset = offset | 0;
     switch (this.execute & 0xA00000) {
         case 0:
             offset = this.updateNoBaseDecrement(offset | 0) | 0;
@@ -2191,6 +2136,24 @@ ARMInstructionSet.prototype.operand2OP_LoadStore6 = function () {
             offset = this.updateBasePreIncrement(offset | 0) | 0;
     }
     return offset | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore1 = function () {
+    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOperandDetermine() | 0, false) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore2 = function () {
+    return this.operand2OP_LoadStoreNotT(this.operand2OP_LoadStoreOperandDetermine() | 0) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
+    return this.operand2OP_LoadStorePostT(this.execute & 0xFFF, userMode) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore4 = function () {
+    return this.operand2OP_LoadStoreNotT(this.execute & 0xFFF) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore5 = function (userMode) {
+    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOffsetGen() | 0, userMode) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore6 = function () {
+    return this.operand2OP_LoadStoreNotT(this.operand2OP_LoadStoreOffsetGen() | 0) | 0;
 }
 ARMInstructionSet.prototype.lli = function () {
     //Get the register data to be shifted:
@@ -2526,54 +2489,6 @@ ARMInstructionSet.prototype.rs = function () {
             ((spsr[6]) ? 0x20 : 0) |
             spsr[7]
             );
-}
-ARMInstructionSet.prototype.ofrm = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateNoBaseDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.prrm = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateBasePreDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.ofim = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateNoBaseDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.prim = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateBasePreDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.ofrp = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateNoBaseIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.prrp = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateBasePreIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.ofip = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateNoBaseIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.prip = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateBasePreIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.sofim = function () {
-    var offset = this.execute & 0xFFF;
-    return this.updateNoBaseDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.sprim = function () {
-    var offset = this.execute & 0xFFF;
-    return this.updateBasePreDecrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.sofip = function () {
-    var offset = this.execute & 0xFFF;
-    return this.updateNoBaseIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.sprip = function () {
-    var offset = this.execute & 0xFFF;
-    return this.updateBasePreIncrement(offset | 0) | 0;
 }
 function compileARMInstructionDecodeMap() {
     var pseudoCodes = [
