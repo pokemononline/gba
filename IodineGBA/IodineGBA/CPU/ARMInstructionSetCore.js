@@ -1078,123 +1078,171 @@ ARMInstructionSet.prototype.LDRSB = function () {
     //Read from memory location:
     this.guard12OffsetRegisterWrite((this.CPUCore.read8(address | 0) << 24) >> 24);
 }
+ARMInstructionSet.prototype.STRH2 = function () {
+    //Perform halfword store calculations:
+    var address = this.operand2OP_LoadStore2() | 0;
+    //Write to memory location:
+    this.CPUCore.write16(address | 0, this.guard12OffsetRegisterRead() | 0);
+}
+ARMInstructionSet.prototype.LDRH2 = function () {
+    //Perform halfword load calculations:
+    var address = this.operand2OP_LoadStore2() | 0;
+    //Read from memory location:
+    this.guard12OffsetRegisterWrite(this.CPUCore.read16(address | 0) | 0);
+}
+ARMInstructionSet.prototype.LDRSH2 = function () {
+    //Perform signed halfword load calculations:
+    var address = this.operand2OP_LoadStore2() | 0;
+    //Read from memory location:
+    this.guard12OffsetRegisterWrite((this.CPUCore.read16(address | 0) << 16) >> 16);
+}
+ARMInstructionSet.prototype.LDRSB2 = function () {
+    //Perform signed byte load calculations:
+    var address = this.operand2OP_LoadStore2() | 0;
+    //Read from memory location:
+    this.guard12OffsetRegisterWrite((this.CPUCore.read8(address | 0) << 24) >> 24);
+}
 ARMInstructionSet.prototype.STR = function () {
     //Perform word store calculations:
-    var address = this.operand2OP_LoadStore2(false) | 0;
+    var address = this.operand2OP_LoadStore3(false) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDR = function () {
     //Perform word load calculations:
-    var address = this.operand2OP_LoadStore2(false) | 0;
+    var address = this.operand2OP_LoadStore3(false) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRB = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore2(false) | 0;
+    var address = this.operand2OP_LoadStore3(false) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRB = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore2(false) | 0;
+    var address = this.operand2OP_LoadStore3(false) | 0;
+    //Read from memory location:
+    this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
+}
+ARMInstructionSet.prototype.STR4 = function () {
+    //Perform word store calculations:
+    var address = this.operand2OP_LoadStore4() | 0;
+    //Write to memory location:
+    this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
+}
+ARMInstructionSet.prototype.LDR4 = function () {
+    //Perform word load calculations:
+    var address = this.operand2OP_LoadStore4() | 0;
+    //Read from memory location:
+    this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
+}
+ARMInstructionSet.prototype.STRB4 = function () {
+    //Perform byte store calculations:
+    var address = this.operand2OP_LoadStore4() | 0;
+    //Write to memory location:
+    this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
+}
+ARMInstructionSet.prototype.LDRB4 = function () {
+    //Perform byte store calculations:
+    var address = this.operand2OP_LoadStore4() | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRT = function () {
     //Perform word store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore2(true) | 0;
+    var address = this.operand2OP_LoadStore3(true) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRT = function () {
     //Perform word load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore2(true) | 0;
+    var address = this.operand2OP_LoadStore3(true) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRBT = function () {
     //Perform byte store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore2(true) | 0;
+    var address = this.operand2OP_LoadStore3(true) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRBT = function () {
     //Perform byte load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore2(true) | 0;
+    var address = this.operand2OP_LoadStore3(true) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STR2 = function () {
     //Perform word store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore5(false) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDR2 = function () {
     //Perform word load calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore5(false) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRB2 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore5(false) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRB2 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore5(false) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRT2 = function () {
     //Perform word store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore5(true) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRT2 = function () {
     //Perform word load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore5(true) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRBT2 = function () {
     //Perform byte store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore5(true) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRBT2 = function () {
     //Perform byte load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore5(true) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STR3 = function () {
     //Perform word store calculations:
-    var address = this.operand2OP_LoadStore4() | 0;
+    var address = this.operand2OP_LoadStore6() | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDR3 = function () {
     //Perform word load calculations:
-    var address = this.operand2OP_LoadStore4() | 0;
+    var address = this.operand2OP_LoadStore6() | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRB3 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore4() | 0;
+    var address = this.operand2OP_LoadStore6() | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRB3 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore4() | 0;
+    var address = this.operand2OP_LoadStore6() | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
@@ -2035,83 +2083,6 @@ ARMInstructionSet.prototype.operand2OP_DataProcessing4 = function () {
     }
     return data | 0;
 }
-ARMInstructionSet.prototype.operand2OP_LoadStore1 = function () {
-    var data = 0;
-    switch ((this.execute >> 21) & 0xF) {
-        case 0:
-        case 1:
-            data = this.ptrm() | 0;
-            break;
-        case 2:
-        case 3:
-            data = this.ptim() | 0;
-            break;
-        case 4:
-        case 5:
-            data = this.ptrp() | 0;
-            break;
-        case 6:
-        case 7:
-            data = this.ptip() | 0;
-            break;
-        case 8:
-            data = this.ofrm() | 0;
-            break;
-        case 9:
-            data = this.prrm() | 0;
-            break;
-        case 0xA:
-            data = this.ofim() | 0;
-            break;
-        case 0xB:
-            data = this.prim() | 0;
-            break;
-        case 0xC:
-            data = this.ofrp() | 0;
-            break;
-        case 0xD:
-            data = this.prrp() | 0;
-            break;
-        case 0xE:
-            data = this.ofip() | 0;
-            break;
-        default:
-            data = this.prip() | 0;
-    }
-    return data | 0;
-}
-ARMInstructionSet.prototype.operand2OP_LoadStore2 = function (userMode) {
-    var data = 0;
-    switch ((this.execute >> 21) & 0xF) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-            data = this.sptim(userMode) | 0;
-            break;
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-            data = this.sptip(userMode) | 0;
-            break;
-        case 8:
-        case 0xA:
-            data = this.sofim() | 0;
-            break;
-        case 0x9:
-        case 0xB:
-            data = this.sprim() | 0;
-            break;
-        case 0xC:
-        case 0xE:
-            data = this.sofip() | 0;
-            break;
-        default:
-            data = this.sprip() | 0;
-    }
-    return data | 0;
-}
 ARMInstructionSet.prototype.operand2OP_LoadStoreOffsetGen = function () {
     var data = 0;
     switch ((this.execute >> 5) & 0x3) {
@@ -2129,8 +2100,8 @@ ARMInstructionSet.prototype.operand2OP_LoadStoreOffsetGen = function () {
     }
     return data | 0;
 }
-ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
-    var offset = this.operand2OP_LoadStoreOffsetGen() | 0;
+ARMInstructionSet.prototype.operand2OP_LoadStorePostT = function (offset, userMode) {
+    offset = offset | 0;
     if ((this.execute & 0x800000) == 0) {
         offset = this.updateBasePostDecrement(offset | 0, userMode) | 0;
     }
@@ -2139,7 +2110,72 @@ ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
     }
     return offset | 0;
 }
+ARMInstructionSet.prototype.operand2OP_LoadStore1 = function () {
+    var offset = 0;
+    if ((this.execute & 0x400000) == 0) {
+        offset = this.readRegister(this.execute & 0xF) | 0;
+    }
+    else {
+        offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
+    }
+    return this.operand2OP_LoadStorePostT(offset | 0, false) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore2 = function () {
+    var data = 0;
+    switch ((this.execute >> 21) & 0x7) {
+        case 0:
+            data = this.ofrm() | 0;
+            break;
+        case 0x1:
+            data = this.prrm() | 0;
+            break;
+        case 0x2:
+            data = this.ofim() | 0;
+            break;
+        case 0x3:
+            data = this.prim() | 0;
+            break;
+        case 0x4:
+            data = this.ofrp() | 0;
+            break;
+        case 0x5:
+            data = this.prrp() | 0;
+            break;
+        case 0x6:
+            data = this.ofip() | 0;
+            break;
+        default:
+            data = this.prip() | 0;
+    }
+    return data | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
+    return this.operand2OP_LoadStorePostT(this.execute & 0xFFF, userMode) | 0;
+}
 ARMInstructionSet.prototype.operand2OP_LoadStore4 = function () {
+    var data = 0;
+    switch ((this.execute >> 21) & 0x7) {
+        case 0:
+        case 0x2:
+            data = this.sofim() | 0;
+            break;
+        case 0x1:
+        case 0x3:
+            data = this.sprim() | 0;
+            break;
+        case 0x4:
+        case 0x6:
+            data = this.sofip() | 0;
+            break;
+        default:
+            data = this.sprip() | 0;
+    }
+    return data | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore5 = function (userMode) {
+    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOffsetGen() | 0, userMode) | 0;
+}
+ARMInstructionSet.prototype.operand2OP_LoadStore6 = function () {
     var offset = this.operand2OP_LoadStoreOffsetGen() | 0;
     switch (this.execute & 0xA00000) {
         case 0:
@@ -2491,22 +2527,6 @@ ARMInstructionSet.prototype.rs = function () {
             spsr[7]
             );
 }
-ARMInstructionSet.prototype.ptrm = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateBasePostDecrement(offset | 0, false) | 0;
-}
-ARMInstructionSet.prototype.ptim = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateBasePostDecrement(offset | 0, false) | 0;
-}
-ARMInstructionSet.prototype.ptrp = function () {
-    var offset = this.readRegister(this.execute & 0xF) | 0;
-    return this.updateBasePostIncrement(offset | 0, false) | 0;
-}
-ARMInstructionSet.prototype.ptip = function () {
-    var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
-    return this.updateBasePostIncrement(offset | 0, false) | 0;
-}
 ARMInstructionSet.prototype.ofrm = function () {
     var offset = this.readRegister(this.execute & 0xF) | 0;
     return this.updateNoBaseDecrement(offset | 0) | 0;
@@ -2538,14 +2558,6 @@ ARMInstructionSet.prototype.ofip = function () {
 ARMInstructionSet.prototype.prip = function () {
     var offset = ((this.execute & 0xF00) >> 4) | (this.execute & 0xF);
     return this.updateBasePreIncrement(offset | 0) | 0;
-}
-ARMInstructionSet.prototype.sptim = function (userMode) {
-    var offset = this.execute & 0xFFF;
-    return this.updateBasePostDecrement(offset | 0, userMode | 0);
-}
-ARMInstructionSet.prototype.sptip = function (userMode) {
-    var offset = this.execute & 0xFFF;
-    return this.updateBasePostIncrement(offset | 0, userMode) | 0;
 }
 ARMInstructionSet.prototype.sofim = function () {
     var offset = this.execute & 0xFFF;
@@ -2642,6 +2654,10 @@ function compileARMInstructionDecodeMap() {
                        "LDRH",
                        "LDRSH",
                        "LDRSB",
+                       "STRH2",
+                       "LDRH2",
+                       "LDRSH2",
+                       "LDRSB2",
                        "STR",
                        "LDR",
                        "STRB",
@@ -2662,6 +2678,10 @@ function compileARMInstructionDecodeMap() {
                        "LDR3",
                        "STRB3",
                        "LDRB3",
+                       "STR4",
+                       "LDR4",
+                       "STRB4",
+                       "LDRB4",
                        "LoadStoreMultiple",
                        "SWP",
                        "SWPB",
@@ -3056,7 +3076,7 @@ function compileARMInstructionDecodeMap() {
                       "UNDEFINED",
                       "SWP",
                       "UNDEFINED",
-                      "STRH",
+                      "STRH2",
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
@@ -3075,11 +3095,11 @@ function compileARMInstructionDecodeMap() {
                       "TSTS",
                       "UNDEFINED",
                       "TSTS",
-                      "LDRH",
+                      "LDRH2",
                       "TSTS",
-                      "LDRSB",
+                      "LDRSB2",
                       "TSTS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //12
         generateMap1([
@@ -3094,7 +3114,7 @@ function compileARMInstructionDecodeMap() {
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
-                      "STRH",
+                      "STRH2",
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
@@ -3113,11 +3133,11 @@ function compileARMInstructionDecodeMap() {
                       "TEQS",
                       "UNDEFINED",
                       "TEQS",
-                      "LDRH",
+                      "LDRH2",
                       "TEQS",
-                      "LDRSB",
+                      "LDRSB2",
                       "TEQS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //14
         generateMap1([
@@ -3132,7 +3152,7 @@ function compileARMInstructionDecodeMap() {
                       "UNDEFINED",
                       "SWPB",
                       "UNDEFINED",
-                      "STRH",
+                      "STRH2",
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
@@ -3151,11 +3171,11 @@ function compileARMInstructionDecodeMap() {
                       "CMPS",
                       "UNDEFINED",
                       "CMPS",
-                      "LDRH",
+                      "LDRH2",
                       "CMPS",
-                      "LDRSB",
+                      "LDRSB2",
                       "CMPS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //16
         generateMap1([
@@ -3170,7 +3190,7 @@ function compileARMInstructionDecodeMap() {
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
-                      "STRH",
+                      "STRH2",
                       "UNDEFINED",
                       "UNDEFINED",
                       "UNDEFINED",
@@ -3189,11 +3209,11 @@ function compileARMInstructionDecodeMap() {
                       "CMNS",
                       "UNDEFINED",
                       "CMNS",
-                      "LDRH",
+                      "LDRH2",
                       "CMNS",
-                      "LDRSB",
+                      "LDRSB2",
                       "CMNS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //18
         generateMap1([
@@ -3208,7 +3228,7 @@ function compileARMInstructionDecodeMap() {
                       "ORR",
                       "UNDEFINED",
                       "ORR",
-                      "STRH",
+                      "STRH2",
                       "ORR",
                       "UNDEFINED",
                       "ORR",
@@ -3227,11 +3247,11 @@ function compileARMInstructionDecodeMap() {
                       "ORRS",
                       "UNDEFINED",
                       "ORRS",
-                      "LDRH",
+                      "LDRH2",
                       "ORRS",
-                      "LDRSB",
+                      "LDRSB2",
                       "ORRS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //1A
         generateMap1([
@@ -3246,7 +3266,7 @@ function compileARMInstructionDecodeMap() {
                       "MOV",
                       "UNDEFINED",
                       "MOV",
-                      "STRH",
+                      "STRH2",
                       "MOV",
                       "UNDEFINED",
                       "MOV",
@@ -3265,11 +3285,11 @@ function compileARMInstructionDecodeMap() {
                       "MOVS",
                       "UNDEFINED",
                       "MOVS",
-                      "LDRH",
+                      "LDRH2",
                       "MOVS",
-                      "LDRSB",
+                      "LDRSB2",
                       "MOVS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //1C
         generateMap1([
@@ -3284,7 +3304,7 @@ function compileARMInstructionDecodeMap() {
                       "BIC",
                       "UNDEFINED",
                       "BIC",
-                      "STRH",
+                      "STRH2",
                       "BIC",
                       "UNDEFINED",
                       "BIC",
@@ -3303,11 +3323,11 @@ function compileARMInstructionDecodeMap() {
                       "BICS",
                       "UNDEFINED",
                       "BICS",
-                      "LDRH",
+                      "LDRH2",
                       "BICS",
-                      "LDRSB",
+                      "LDRSB2",
                       "BICS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //1E
         generateMap1([
@@ -3322,7 +3342,7 @@ function compileARMInstructionDecodeMap() {
                       "MVN",
                       "UNDEFINED",
                       "MVN",
-                      "STRH",
+                      "STRH2",
                       "MVN",
                       "UNDEFINED",
                       "MVN",
@@ -3341,11 +3361,11 @@ function compileARMInstructionDecodeMap() {
                       "MVNS",
                       "UNDEFINED",
                       "MVNS",
-                      "LDRH",
+                      "LDRH2",
                       "MVNS",
-                      "LDRSB",
+                      "LDRSB2",
                       "MVNS",
-                      "LDRSH"
+                      "LDRSH2"
                       ]);
         //20
         generateMap2("AND");
@@ -3444,37 +3464,37 @@ function compileARMInstructionDecodeMap() {
         //4F
         generateMap2("LDRBT");
         //50
-        generateMap2("STR");
+        generateMap2("STR4");
         //51
-        generateMap2("LDR");
+        generateMap2("LDR4");
         //52
-        generateMap2("STR");
+        generateMap2("STR4");
         //53
-        generateMap2("LDR");
+        generateMap2("LDR4");
         //54
-        generateMap2("STRB");
+        generateMap2("STRB4");
         //55
-        generateMap2("LDRB");
+        generateMap2("LDRB4");
         //56
-        generateMap2("STRB");
+        generateMap2("STRB4");
         //57
-        generateMap2("LDRB");
+        generateMap2("LDRB4");
         //58
-        generateMap2("STR");
+        generateMap2("STR4");
         //59
-        generateMap2("LDR");
+        generateMap2("LDR4");
         //5A
-        generateMap2("STR");
+        generateMap2("STR4");
         //5B
-        generateMap2("LDR");
+        generateMap2("LDR4");
         //5C
-        generateMap2("STRB");
+        generateMap2("STRB4");
         //5D
-        generateMap2("LDRB");
+        generateMap2("LDRB4");
         //5E
-        generateMap2("STRB");
+        generateMap2("STRB4");
         //5F
-        generateMap2("LDRB");
+        generateMap2("LDRB4");
         //60-6F
         generateStoreLoadInstructionSector1();
         //70-7F

@@ -88,7 +88,6 @@ GameBoyAdvanceGraphics.prototype.initializeIO = function () {
     this.backdrop = this.transparency | 0x200000;
 }
 GameBoyAdvanceGraphics.prototype.initializeRenderer = function () {
-    this.oddLine = false;
     this.initializePaletteStorage();
     this.compositor = new GameBoyAdvanceCompositor(this);
     this.bg0Renderer = new GameBoyAdvanceBGTEXTRenderer(this, 0);
@@ -295,7 +294,7 @@ GameBoyAdvanceGraphics.prototype.updateVBlankStart = function () {
         this.IOCore.irq.requestIRQ(0x1);
     }
     //Ensure JIT framing alignment:
-    if ((this.totalLinesPassed | 0) < 160 || ((this.totalLinesPassed | 0) < 320 && this.settings.lineSkip)) {
+    if ((this.totalLinesPassed | 0) < 160) {
         //Make sure our gfx are up-to-date:
         this.graphicsJITVBlank();
         //Draw the frame:
@@ -313,19 +312,7 @@ GameBoyAdvanceGraphics.prototype.graphicsJITVBlank = function () {
     this.graphicsJITScanlineGroup();
 }
 GameBoyAdvanceGraphics.prototype.renderScanLine = function () {
-    //Line Skip Check:
-    if (this.settings.lineSkip) {
-        this.oddLine = !this.oddLine;
-        if (!this.oddLine) {
-            this.renderer.renderScanLine(this.lastUnrenderedLine | 0);
-        }
-        if (this.lastUnrenderedLine == 159) {
-            this.oddLine = !this.oddLine;
-        }
-    }
-    else {
-        this.renderer.renderScanLine(this.lastUnrenderedLine | 0);
-    }
+    this.renderer.renderScanLine(this.lastUnrenderedLine | 0);
     //Update the affine bg counters:
     this.updateReferenceCounters();
 }

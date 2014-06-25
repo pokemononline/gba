@@ -521,8 +521,7 @@ if (__LITTLE_ENDIAN__) {
 }
 else {
     GameBoyAdvanceMemory.prototype.readBIOS16 = function (address) {
-        address = address | 0;
-        if ((address | 0) < 0x4000) {
+        if (address < 0x4000) {
             this.IOCore.updateCoreSingle();
             if (this.cpu.registers[15] < 0x4000) {
                 //If reading from BIOS while executing it:
@@ -538,8 +537,7 @@ else {
         }
     }
     GameBoyAdvanceMemory.prototype.readBIOS16CPU = function (address) {
-        address = address | 0;
-        if ((address | 0) < 0x4000) {
+        if (address < 0x4000) {
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
             var data = this.BIOS[address] | (this.BIOS[address | 1] << 8);
@@ -551,8 +549,7 @@ else {
         }
     }
     GameBoyAdvanceMemory.prototype.readBIOS32 = function (address) {
-        address = address | 0;
-        if ((address | 0) < 0x4000) {
+        if (address < 0x4000) {
             this.IOCore.updateCoreSingle();
             if (this.cpu.registers[15] < 0x4000) {
                 //If reading from BIOS while executing it:
@@ -568,8 +565,7 @@ else {
         }
     }
     GameBoyAdvanceMemory.prototype.readBIOS32CPU = function (address) {
-        address = address | 0;
-        if ((address | 0) < 0x4000) {
+        if (address < 0x4000) {
             this.wait.singleClockCPU();
             //If reading from BIOS while executing it:
             var data = this.BIOS[address] | (this.BIOS[address | 1] << 8) | (this.BIOS[address | 2] << 16)  | (this.BIOS[address | 3] << 24);

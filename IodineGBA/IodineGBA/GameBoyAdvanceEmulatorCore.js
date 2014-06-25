@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,7 +18,6 @@
 function GameBoyAdvanceEmulator() {
     this.settings = {
         "SKIPBoot":false,                   //Skip the BIOS boot screen.
-        "lineSkip":false,                   //Skip every other line draw.
         "useWorkers":true,                  //Enable Web Workers for compiling.
         "audioVolume":1,                    //Starting audio volume.
         "audioBufferUnderrunLimit":4,       //Audio buffer minimum span amount over x interpreter iterations.
@@ -29,7 +28,7 @@ function GameBoyAdvanceEmulator() {
         "dynamicSpeed":false                //Whether to actively change the target speed for best user experience.
     }
     this.audioFound = false;                  //Do we have audio output sink found yet?
-    this.romFound = false;                    //Do we have a ROM loaded in?
+    this.loaded = false;                      //Did we initialize IodineGBA?
     this.faultFound = false;                  //Did we run into a fatal error?
     this.paused = true;                       //Are we paused?
     this.offscreenWidth = 240;                //Width of the GBA screen.
@@ -68,6 +67,11 @@ GameBoyAdvanceEmulator.prototype.play = function () {
     if (this.paused) {
         this.startTimer();
         this.paused = false;
+        if (!this.loaded) {
+            this.initializeCore();
+            this.loaded = true;
+            this.importSave();
+        }
     }
 }
 GameBoyAdvanceEmulator.prototype.pause = function () {
@@ -79,21 +83,19 @@ GameBoyAdvanceEmulator.prototype.pause = function () {
 }
 GameBoyAdvanceEmulator.prototype.stop = function () {
     this.faultFound = false;
-    this.romFound = false;
+    this.loaded = false;
     this.audioUpdateState = this.audioFound;
     this.pause();
 }
-GameBoyAdvanceEmulator.prototype.statusClear = function () {
-    this.faultFound = false;
-    this.pause();
-}
 GameBoyAdvanceEmulator.prototype.restart = function () {
-    this.faultFound = false;
-    this.exportSave();
-    this.initializeCore();
-    this.importSave();
-    this.resetMetrics();
-    this.reinitializeAudio();
+    if (this.loaded) {
+        this.faultFound = false;
+        this.exportSave();
+        this.initializeCore();
+        this.importSave();
+        this.audioUpdateState = this.audioFound;
+        this.setSpeed(1);
+    }
 }
 GameBoyAdvanceEmulator.prototype.clearTimer = function () {
     clearInterval(this.timer);
@@ -107,7 +109,7 @@ GameBoyAdvanceEmulator.prototype.startTimer = function () {
 GameBoyAdvanceEmulator.prototype.timerCallback = function () {
     //Check to see if web view is not hidden, if hidden don't run due to JS timers being inaccurate on page hide:
     if (!document.hidden && !document.msHidden && !document.mozHidden && !document.webkitHidden) {
-        if (!this.faultFound && this.romFound) {                        //Any error pending or no ROM loaded is a show-stopper!
+        if (!this.faultFound && this.loaded) {                          //Any error pending or no ROM loaded is a show-stopper!
             this.iterationStartSequence();                              //Run start of iteration stuff.
             this.IOCore.iterate(this.CPUCyclesTotal | 0);               //Step through the emulation core loop.
             this.iterationEndSequence();                                //Run end of iteration stuff.
@@ -130,16 +132,13 @@ GameBoyAdvanceEmulator.prototype.iterationEndSequence = function () {
 GameBoyAdvanceEmulator.prototype.attachROM = function (ROM) {
     this.stop();
     this.ROM = ROM;
-    this.initializeCore();
-    this.romFound = true;
-    this.importSave();
 }
 GameBoyAdvanceEmulator.prototype.attachBIOS = function (BIOS) {
-    this.statusClear();
+    this.stop();
     this.BIOS = BIOS;
 }
 GameBoyAdvanceEmulator.prototype.getGameName = function () {
-    if (!this.faultFound && this.romFound) {
+    if (!this.faultFound && this.loaded) {
         return this.IOCore.cartridge.name;
     }
     else {
@@ -167,7 +166,7 @@ GameBoyAdvanceEmulator.prototype.importSave = function () {
         if (name != "") {
             var save = this.saveImportHandler(name);
             var saveType = this.saveImportHandler("TYPE_" + name);
-            if (save && saveType && !this.faultFound && this.romFound) {
+            if (save && saveType && !this.faultFound && this.loaded) {
                 var length = save.length | 0;
                 var convertedSave = getUint8Array(length | 0);
                 if ((length | 0) > 0) {
@@ -181,7 +180,7 @@ GameBoyAdvanceEmulator.prototype.importSave = function () {
     }
 }
 GameBoyAdvanceEmulator.prototype.exportSave = function () {
-    if (this.saveExportHandler && !this.faultFound && this.romFound) {
+    if (this.saveExportHandler && !this.faultFound && this.loaded) {
         var save = this.IOCore.saves.exportSave();
         var saveType = this.IOCore.saves.exportSaveType();
         if (save != null && saveType != null) {
@@ -191,9 +190,13 @@ GameBoyAdvanceEmulator.prototype.exportSave = function () {
     }
 }
 GameBoyAdvanceEmulator.prototype.setSpeed = function (speed) {
-    this.settings.emulatorSpeed = Math.min(Math.max(parseFloat(speed), 0.01), 10);
-    this.calculateTimings();
-    this.reinitializeAudio();
+    var speed = Math.min(Math.max(parseFloat(speed), 0.01), 10);
+    this.resetMetrics();
+    if (speed != this.settings.emulatorSpeed) {
+        this.settings.emulatorSpeed = speed | 0;
+        this.calculateTimings();
+        this.reinitializeAudio();
+    }
 }
 GameBoyAdvanceEmulator.prototype.getSpeed = function (speed) {
     return this.settings.emulatorSpeed;
@@ -222,15 +225,16 @@ GameBoyAdvanceEmulator.prototype.calculateSpeedPercentage = function () {
             var metricEnd = new Date();
             var timeDiff = Math.max(metricEnd.getTime() - this.metricStart.getTime(), 1);
             var result = ((this.settings.timerIntervalRate * this.clockCyclesSinceStart / timeDiff) / this.CPUCyclesPerIteration) * 100;
+            var speed = this.getSpeed();
             if (this.settings.dynamicSpeed) {
                 if (result < 97) {
-                    this.setSpeed(this.getSpeed() - 0.02);
+                    speed -= 0.02;
                 }
                 else if (this.getSpeed() < 1) {
-                    this.setSpeed(Math.min(this.getSpeed() + 0.02, 1));
+                    speed = Math.min(speed + 0.02, 1);
                 }
             }
-            this.resetMetrics();
+            this.setSpeed(speed);
             if (this.speedCallback) {
                 this.speedCallback(result.toFixed(2) + "%");
             }
@@ -368,17 +372,10 @@ GameBoyAdvanceEmulator.prototype.reinitializeAudio = function () {
 }
 GameBoyAdvanceEmulator.prototype.toggleSkipBootROM = function (skipBoot) {
     this.settings.SKIPBoot = !!skipBoot;
-    if (this.romFound && this.paused) {
-        this.initializeCore();
-        this.importSave();
-    }
 }
 GameBoyAdvanceEmulator.prototype.toggleDynamicSpeed = function (dynamicSpeed) {
     this.settings.dynamicSpeed = !!dynamicSpeed;
     if (!this.settings.dynamicSpeed) {
         this.setSpeed(1);
     }
-}
-GameBoyAdvanceEmulator.prototype.toggleLineSkip = function (lineSkip) {
-    this.settings.lineSkip = !!lineSkip;
 }
