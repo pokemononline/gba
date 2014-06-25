@@ -260,8 +260,9 @@ ARMInstructionSet.prototype.guardUserRegisterWriteLDM = function (address, data)
 ARMInstructionSet.prototype.baseRegisterWrite = function (data, userMode) {
     //Update writeback for offset+base modes:
     data = data | 0;
+    userMode = userMode | 0;
     var address = (this.execute >> 16) & 0xF;
-    if (!userMode || (address | 0) == 0xF) {
+    if ((address | userMode) == 0xF) {
         this.guardRegisterWrite(address | 0, data | 0);
     }
     else {
@@ -366,8 +367,9 @@ ARMInstructionSet.prototype.guardUserRegisterReadSTM = function (address) {
 }
 ARMInstructionSet.prototype.baseRegisterRead = function (userMode) {
     //Read specially for offset+base modes:
+    userMode = userMode | 0;
     var address = (this.execute >> 16) & 0xF;
-    if (!userMode || (address | 0) == 0xF) {
+    if ((address | userMode) == 0xF) {
         return this.readRegister(address | 0) | 0;
     }
     else {
@@ -1058,25 +1060,25 @@ ARMInstructionSet.prototype.LDRSB2 = function () {
 }
 ARMInstructionSet.prototype.STR = function () {
     //Perform word store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore3(0) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDR = function () {
     //Perform word load calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore3(0) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRB = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore3(0) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRB = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore3(false) | 0;
+    var address = this.operand2OP_LoadStore3(0) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
@@ -1106,73 +1108,73 @@ ARMInstructionSet.prototype.LDRB4 = function () {
 }
 ARMInstructionSet.prototype.STRT = function () {
     //Perform word store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore3(0xF) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRT = function () {
     //Perform word load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore3(0xF) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRBT = function () {
     //Perform byte store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore3(0xF) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRBT = function () {
     //Perform byte load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore3(true) | 0;
+    var address = this.operand2OP_LoadStore3(0xF) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STR2 = function () {
     //Perform word store calculations:
-    var address = this.operand2OP_LoadStore5(false) | 0;
+    var address = this.operand2OP_LoadStore5(0) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDR2 = function () {
     //Perform word load calculations:
-    var address = this.operand2OP_LoadStore5(false) | 0;
+    var address = this.operand2OP_LoadStore5(0) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRB2 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore5(false) | 0;
+    var address = this.operand2OP_LoadStore5(0) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRB2 = function () {
     //Perform byte store calculations:
-    var address = this.operand2OP_LoadStore5(false) | 0;
+    var address = this.operand2OP_LoadStore5(0) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRT2 = function () {
     //Perform word store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore5(true) | 0;
+    var address = this.operand2OP_LoadStore5(0xF) | 0;
     //Write to memory location:
     this.CPUCore.write32(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRT2 = function () {
     //Perform word load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore5(true) | 0;
+    var address = this.operand2OP_LoadStore5(0xF) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read32(address | 0) | 0);
 }
 ARMInstructionSet.prototype.STRBT2 = function () {
     //Perform byte store calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore5(true) | 0;
+    var address = this.operand2OP_LoadStore5(0xF) | 0;
     //Write to memory location:
     this.CPUCore.write8(address | 0, this.guard12OffsetRegisterRead() | 0);
 }
 ARMInstructionSet.prototype.LDRBT2 = function () {
     //Perform byte load calculations (forced user-mode):
-    var address = this.operand2OP_LoadStore5(true) | 0;
+    var address = this.operand2OP_LoadStore5(0xF) | 0;
     //Read from memory location:
     this.guard12OffsetRegisterWrite(this.CPUCore.read8(address | 0) | 0);
 }
@@ -2066,14 +2068,15 @@ ARMInstructionSet.prototype.operand2OP_LoadStoreOperandDetermine = function () {
 }
 ARMInstructionSet.prototype.operand2OP_LoadStorePostT = function (offset, userMode) {
     offset = offset | 0;
-    var base = this.baseRegisterRead(userMode) | 0;
+    userMode = userMode | 0;
+    var base = this.baseRegisterRead(userMode | 0) | 0;
     if ((this.execute & 0x800000) == 0) {
         offset = ((base | 0) - (offset | 0)) | 0;
     }
     else {
         offset = ((base | 0) + (offset | 0)) | 0;
     }
-    this.baseRegisterWrite(offset | 0, userMode);
+    this.baseRegisterWrite(offset | 0, userMode | 0);
     return base | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStoreNotT = function (offset) {
@@ -2091,19 +2094,21 @@ ARMInstructionSet.prototype.operand2OP_LoadStoreNotT = function (offset) {
     return offset | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore1 = function () {
-    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOperandDetermine() | 0, false) | 0;
+    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOperandDetermine() | 0, 0) | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore2 = function () {
     return this.operand2OP_LoadStoreNotT(this.operand2OP_LoadStoreOperandDetermine() | 0) | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore3 = function (userMode) {
-    return this.operand2OP_LoadStorePostT(this.execute & 0xFFF, userMode) | 0;
+    userMode = userMode | 0;
+    return this.operand2OP_LoadStorePostT(this.execute & 0xFFF, userMode | 0) | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore4 = function () {
     return this.operand2OP_LoadStoreNotT(this.execute & 0xFFF) | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore5 = function (userMode) {
-    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOffsetGen() | 0, userMode) | 0;
+    userMode = userMode | 0;
+    return this.operand2OP_LoadStorePostT(this.operand2OP_LoadStoreOffsetGen() | 0, userMode | 0) | 0;
 }
 ARMInstructionSet.prototype.operand2OP_LoadStore6 = function () {
     return this.operand2OP_LoadStoreNotT(this.operand2OP_LoadStoreOffsetGen() | 0) | 0;
