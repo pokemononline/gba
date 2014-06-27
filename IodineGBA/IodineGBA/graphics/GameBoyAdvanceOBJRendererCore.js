@@ -91,25 +91,25 @@ GameBoyAdvanceOBJRenderer.prototype.initializeOAMTable = function () {
 }
 GameBoyAdvanceOBJRenderer.prototype.renderScanLine = function (line) {
     this.targetBuffer = this.scratchBuffer;
-    this.performRenderLoop(line, false);
+    this.performRenderLoop(line | 0, false);
     return this.scratchBuffer;
 }
 GameBoyAdvanceOBJRenderer.prototype.renderWindowScanLine = function (line) {
     this.targetBuffer = this.scratchWindowBuffer;
-    this.performRenderLoop(line, true);
+    this.performRenderLoop(line | 0, true);
     return this.scratchWindowBuffer;
 }
 GameBoyAdvanceOBJRenderer.prototype.performRenderLoop = function (line, isOBJWindow) {
     this.clearScratch();
     for (var objNumber = 0; objNumber < 0x80; ++objNumber) {
-        this.renderSprite(line, this.OAMTable[objNumber], isOBJWindow);
+        this.renderSprite(line | 0, this.OAMTable[objNumber], isOBJWindow);
     }
 }
 GameBoyAdvanceOBJRenderer.prototype.renderSprite = function (line, sprite, isOBJWindow) {
     if (this.isDrawable(sprite, isOBJWindow)) {
         if (sprite.mosaic) {
             //Correct line number for mosaic:
-            line -= this.gfx.mosaicRenderer.getOBJMosaicYOffset(line);
+            line -= this.gfx.mosaicRenderer.getOBJMosaicYOffset(line | 0);
         }
         //Obtain horizontal size info:
         var xSize = this.lookupXSize[(sprite.shape << 2) | sprite.size] << ((sprite.doubleSizeOrDisabled) ? 1 : 0);

@@ -74,7 +74,7 @@ else {
         var y = this.pd;
         if (this.gfx.BGMosaic[this.BGLayer & 3]) {
             //Correct line number for mosaic:
-            var mosaicY = this.gfx.mosaicRenderer.getMosaicYOffset(line);
+            var mosaicY = this.gfx.mosaicRenderer.getMosaicYOffset(line | 0);
             x -= this.actualBGdmx * mosaicY;
             y -= this.actualBGdmy * mosaicY;
         }

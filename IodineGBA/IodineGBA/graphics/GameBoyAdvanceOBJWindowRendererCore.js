@@ -22,11 +22,11 @@ function GameBoyAdvanceOBJWindowRenderer(gfx) {
 }
 GameBoyAdvanceOBJWindowRenderer.prototype.renderNormalScanLine = function (line, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer) {
     //Arrange our layer stack so we can remove disabled and order for correct edge case priority:
-    OBJBuffer = (this.gfx.WINOBJOBJOutside) ? OBJBuffer : null;
-    BG0Buffer = (this.gfx.WINOBJBG0Outside) ? BG0Buffer: null;
-    BG1Buffer = (this.gfx.WINOBJBG1Outside) ? BG1Buffer: null;
-    BG2Buffer = (this.gfx.WINOBJBG2Outside) ? BG2Buffer: null;
-    BG3Buffer = (this.gfx.WINOBJBG3Outside) ? BG3Buffer: null;
+    OBJBuffer = ((this.gfx.WINOBJOutside & 0x10) == 0x10) ? OBJBuffer : null;
+    BG0Buffer = ((this.gfx.WINOBJOutside & 0x1) == 0x1) ? BG0Buffer: null;
+    BG1Buffer = ((this.gfx.WINOBJOutside & 0x2) == 0x2) ? BG1Buffer: null;
+    BG2Buffer = ((this.gfx.WINOBJOutside & 0x4) == 0x4) ? BG2Buffer: null;
+    BG3Buffer = ((this.gfx.WINOBJOutside & 0x8) == 0x8) ? BG3Buffer: null;
     var layerStack = this.gfx.compositor.cleanLayerStack(OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
     var stackDepth = layerStack.length | 0;
     var stackIndex = 0;
@@ -76,13 +76,13 @@ GameBoyAdvanceOBJWindowRenderer.prototype.renderNormalScanLine = function (line,
 }
 GameBoyAdvanceOBJWindowRenderer.prototype.renderScanLineWithEffects = function (line, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer) {
     //Arrange our layer stack so we can remove disabled and order for correct edge case priority:
-    if (this.gfx.displayObjectWindowFlag || this.gfx.displayWindow1Flag || this.gfx.displayWindow0Flag) {
+    if ((this.gfx.display & 0xE0) > 0) {
         //Window registers can further disable background layers if one or more window layers enabled:
-        OBJBuffer = (this.gfx.WINOBJOBJOutside) ? OBJBuffer : null;
-        BG0Buffer = (this.gfx.WINOBJBG0Outside) ? BG0Buffer: null;
-        BG1Buffer = (this.gfx.WINOBJBG1Outside) ? BG1Buffer: null;
-        BG2Buffer = (this.gfx.WINOBJBG2Outside) ? BG2Buffer: null;
-        BG3Buffer = (this.gfx.WINOBJBG3Outside) ? BG3Buffer: null;
+        OBJBuffer = ((this.gfx.WINOBJOutside & 0x10) == 0x10) ? OBJBuffer : null;
+        BG0Buffer = ((this.gfx.WINOBJOutside & 0x1) == 0x1) ? BG0Buffer: null;
+        BG1Buffer = ((this.gfx.WINOBJOutside & 0x2) == 0x2) ? BG1Buffer: null;
+        BG2Buffer = ((this.gfx.WINOBJOutside & 0x4) == 0x4) ? BG2Buffer: null;
+        BG3Buffer = ((this.gfx.WINOBJOutside & 0x8) == 0x8) ? BG3Buffer: null;
     }
     var layerStack = this.gfx.compositor.cleanLayerStack(OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
     var stackDepth = layerStack.length | 0;
@@ -133,5 +133,5 @@ GameBoyAdvanceOBJWindowRenderer.prototype.renderScanLineWithEffects = function (
     }
 }
 GameBoyAdvanceOBJWindowRenderer.prototype.preprocess = function () {
-    this.renderScanLine = (this.gfx.WINOBJEffectsOutside) ? this.renderScanLineWithEffects : this.renderNormalScanLine;
+    this.renderScanLine = ((this.gfx.WINOBJOutside & 0x20) == 0x20) ? this.renderScanLineWithEffects : this.renderNormalScanLine;
 }

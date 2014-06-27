@@ -2120,7 +2120,7 @@ ARMInstructionSet.prototype.lli = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Shift the register data left:
     var shifter = (this.execute >> 7) & 0x1F;
-    return register << shifter;
+    return register << (shifter | 0);
 }
 ARMInstructionSet.prototype.llis = function () {
     //Get the register data to be shifted:
@@ -2130,11 +2130,11 @@ ARMInstructionSet.prototype.llis = function () {
     //Get the shift amount:
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        this.CPSR.setCarry((register << (shifter - 1)) < 0);
+    if ((shifter | 0) > 0) {
+        this.CPSR.setCarry((register << ((shifter | 0) - 1)) < 0);
     }
     //Shift the register data left:
-    return register << shifter;
+    return register << (shifter | 0);
 }
 ARMInstructionSet.prototype.llr = function () {
     //Logical Left Shift with Register:
@@ -2144,7 +2144,13 @@ ARMInstructionSet.prototype.llr = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Shift the register data left:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
-    return (shifter < 0x20) ? (register << shifter) : 0;
+    if ((shifter | 0) < 0x20) {
+        register = register << (shifter | 0);
+    }
+    else {
+        register = 0;
+    }
+    return register | 0;
 }
 ARMInstructionSet.prototype.llrs = function () {
     //Logical Left Shift with Register and CPSR:
@@ -2155,21 +2161,23 @@ ARMInstructionSet.prototype.llrs = function () {
     //Get the shift amount:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        if (shifter < 0x20) {
+    if ((shifter | 0) > 0) {
+        if ((shifter | 0) < 0x20) {
             //Shift the register data left:
-            this.CPSR.setCarry((register << ((shifter - 1) | 0)) < 0);
-            return register << shifter;
-        }
-        else if (shifter == 0x20) {
-            //Shift bit 0 into carry:
-            this.CPSR.setCarry((register & 0x1) == 0x1);
+            this.CPSR.setCarry((register << (((shifter | 0) - 1) | 0)) < 0);
+            register = register << (shifter | 0);
         }
         else {
-            //Everything Zero'd:
-            this.CPSR.setCarryFalse();
+            if ((shifter | 0) == 0x20) {
+                //Shift bit 0 into carry:
+                this.CPSR.setCarry((register & 0x1) == 0x1);
+            }
+            else {
+                //Everything Zero'd:
+                this.CPSR.setCarryFalse();
+            }
+            register = 0;
         }
-        return 0;
     }
     //If shift is 0, just return the register without mod:
     return register | 0;
@@ -2181,11 +2189,14 @@ ARMInstructionSet.prototype.lri = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Shift the register data right logically:
     var shifter = (this.execute >> 7) & 0x1F;
-    if (shifter == 0) {
+    if ((shifter | 0) == 0) {
         //Return 0:
-        return 0;
+        register = 0;
     }
-    return (register >>> shifter) | 0;
+    else {
+        register = (register >>> (shifter | 0)) | 0;
+    }
+    return register | 0;
 }
 ARMInstructionSet.prototype.lris = function () {
     //Get the register data to be shifted:
@@ -2195,16 +2206,17 @@ ARMInstructionSet.prototype.lris = function () {
     //Get the shift amount:
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        this.CPSR.setCarry(((register >>> (shifter - 1)) & 0x1) == 0x1);
+    if ((shifter | 0) > 0) {
+        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
         //Shift the register data right logically:
-        return register >>> shifter;
+        register = (register >>> (shifter | 0)) | 0;
     }
     else {
-        this.CPSR.setCarry(register < 0);
+        this.CPSR.setCarry((register | 0) < 0);
         //Return 0:
-        return 0;
+        register = 0;
     }
+    return register | 0;
 }
 ARMInstructionSet.prototype.lrr = function () {
     //Get the register data to be shifted:
@@ -2213,7 +2225,13 @@ ARMInstructionSet.prototype.lrr = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Shift the register data right logically:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
-    return (shifter < 0x20) ? ((register >>> shifter) | 0) : 0;
+    if ((shifter | 0) < 0x20) {
+        register = (register >>> (shifter | 0)) | 0;
+    }
+    else {
+        register = 0;
+    }
+    return register | 0;
 }
 ARMInstructionSet.prototype.lrrs = function () {
     //Logical Right Shift with Register and CPSR:
@@ -2224,21 +2242,23 @@ ARMInstructionSet.prototype.lrrs = function () {
     //Get the shift amount:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        if (shifter < 0x20) {
+    if ((shifter | 0) > 0) {
+        if ((shifter | 0) < 0x20) {
             //Shift the register data right logically:
-            this.CPSR.setCarry(((register >> ((shifter - 1) | 0)) & 0x1) == 0x1);
-            return (register >>> shifter) | 0;
-        }
-        else if (shifter == 0x20) {
-            //Shift bit 31 into carry:
-            this.CPSR.setCarry(register < 0);
+            this.CPSR.setCarry(((register >> (((shifter | 0) - 1) | 0)) & 0x1) == 0x1);
+            register = (register >>> (shifter | 0)) | 0;
         }
         else {
-            //Everything Zero'd:
-            this.CPSR.setCarryFalse();
+            if ((shifter | 0) == 0x20) {
+                //Shift bit 31 into carry:
+                this.CPSR.setCarry((register | 0) < 0);
+            }
+            else {
+                //Everything Zero'd:
+                this.CPSR.setCarryFalse();
+            }
+            register = 0;
         }
-        return 0;
     }
     //If shift is 0, just return the register without mod:
     return register | 0;
@@ -2250,12 +2270,12 @@ ARMInstructionSet.prototype.ari = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Get the shift amount:
     var shifter = (this.execute >> 7) & 0x1F;
-    if (shifter == 0) {
+    if ((shifter | 0) == 0) {
         //Shift full length if shifter is zero:
         shifter = 0x1F;
     }
     //Shift the register data right:
-    return register >> shifter;
+    return register >> (shifter | 0);
 }
 ARMInstructionSet.prototype.aris = function () {
     //Get the register data to be shifted:
@@ -2265,16 +2285,16 @@ ARMInstructionSet.prototype.aris = function () {
     //Get the shift amount:
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        this.CPSR.setCarry(((register >>> (shifter - 1)) & 0x1) == 0x1);
+    if ((shifter | 0) > 0) {
+        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
     }
     else {
         //Shift full length if shifter is zero:
         shifter = 0x1F;
-        this.CPSR.setCarry(register < 0);
+        this.CPSR.setCarry((register | 0) < 0);
     }
     //Shift the register data right:
-    return register >> shifter;
+    return register >> (shifter | 0);
 }
 ARMInstructionSet.prototype.arr = function () {
     //Arithmetic Right Shift with Register:
@@ -2294,16 +2314,16 @@ ARMInstructionSet.prototype.arrs = function () {
     //Get the shift amount:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
     //Check to see if we need to update CPSR:
-    if (shifter > 0) {
-        if (shifter < 0x20) {
+    if ((shifter | 0) > 0) {
+        if ((shifter | 0) < 0x20) {
             //Shift the register data right arithmetically:
-            this.CPSR.setCarry(((register >> ((shifter - 1) | 0)) & 0x1) == 0x1);
-            return register >> shifter;
+            this.CPSR.setCarry(((register >> (((shifter | 0) - 1) | 0)) & 0x1) == 0x1);
+            register = register >> (shifter | 0);
         }
         else {
             //Set all bits with bit 31:
-            this.CPSR.setCarry(register < 0);
-            return register >> 0x1F;
+            this.CPSR.setCarry((register | 0) < 0);
+            register = register >> 0x1F;
         }
     }
     //If shift is 0, just return the register without mod:
@@ -2317,14 +2337,15 @@ ARMInstructionSet.prototype.rri = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Rotate the register right:
     var shifter = (this.execute >> 7) & 0x1F;
-    if (shifter > 0) {
+    if ((shifter | 0) > 0) {
         //ROR
-        return (register << (0x20 - shifter)) | (register >>> shifter);
+        register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
     }
     else {
         //RRX
-        return ((this.CPSR.getCarry()) ? 0x80000000 : 0) | (register >>> 0x1);
+        register = ((this.CPSR.getCarry()) ? 0x80000000 : 0) | (register >>> 0x1);
     }
+    return register | 0;
 }
 ARMInstructionSet.prototype.rris = function () {
     //Rotate Right with Immediate and CPSR:
@@ -2334,17 +2355,18 @@ ARMInstructionSet.prototype.rris = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Rotate the register right:
     var shifter = (this.execute >> 7) & 0x1F;
-    if (shifter > 0) {
+    if ((shifter | 0) > 0) {
         //ROR
-        this.CPSR.setCarry(((register >>> (shifter - 1)) & 0x1) == 0x1);
-        return (register << (0x20 - shifter)) | (register >>> shifter);
+        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+        register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
     }
     else {
         //RRX
         var rrxValue = ((this.CPSR.getCarry()) ? 0x80000000 : 0) | (register >>> 0x1);
         this.CPSR.setCarry((register & 0x1) != 0);
-        return rrxValue | 0;
+        register = rrxValue | 0;
     }
+    return register | 0;
 }
 ARMInstructionSet.prototype.rrr = function () {
     //Rotate Right with Register:
@@ -2354,9 +2376,9 @@ ARMInstructionSet.prototype.rrr = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Rotate the register right:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0x1F;
-    if (shifter > 0) {
+    if ((shifter | 0) > 0) {
         //ROR
-        return (register << (0x20 - shifter)) | (register >>> shifter);
+        register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
     }
     //If shift is 0, just return the register without mod:
     return register | 0;
@@ -2369,16 +2391,16 @@ ARMInstructionSet.prototype.rrrs = function () {
     this.wait.CPUInternalSingleCyclePrefetch();
     //Rotate the register right:
     var shifter = this.guardRegisterRead((this.execute >> 8) & 0xF) & 0xFF;
-    if (shifter > 0) {
-        shifter &= 0x1F;
-        if (shifter > 0) {
+    if ((shifter | 0) > 0) {
+        shifter = shifter & 0x1F;
+        if ((shifter | 0) > 0) {
             //ROR
-            this.CPSR.setCarry(((register >>> (shifter - 1)) & 0x1) == 0x1);
-            return (register << (0x20 - shifter)) | (register >>> shifter);
+            this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+            register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
         }
         else {
             //No shift, but make carry set to bit 31:
-            this.CPSR.setCarry(register < 0);
+            this.CPSR.setCarry((register | 0) < 0);
         }
     }
     //If shift is 0, just return the register without mod:
@@ -2389,8 +2411,8 @@ ARMInstructionSet.prototype.imm = function () {
     var immediate = this.execute & 0xFF;
     //Rotate the immediate right:
     var shifter = (this.execute >> 7) & 0x1E;
-    if (shifter > 0) {
-        immediate = (immediate << (0x20 - shifter)) | (immediate >>> shifter);
+    if ((shifter | 0) > 0) {
+        immediate = (immediate << (0x20 - (shifter | 0))) | (immediate >>> (shifter | 0));
     }
     return immediate | 0;
 }
@@ -2399,8 +2421,8 @@ ARMInstructionSet.prototype.imms = function () {
     var immediate = this.execute & 0xFF;
     //Rotate the immediate right:
     var shifter = (this.execute >> 7) & 0x1E;
-    if (shifter > 0) {
-        immediate = (immediate << (0x20 - shifter)) | (immediate >>> shifter);
+    if ((shifter | 0) > 0) {
+        immediate = (immediate << (0x20 - (shifter | 0))) | (immediate >>> (shifter | 0));
         this.CPSR.setCarry(immediate < 0);
     }
     return immediate | 0;

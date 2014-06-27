@@ -25,7 +25,7 @@ function GameBoyAdvanceMosaicRenderer(gfx) {
 GameBoyAdvanceMosaicRenderer.prototype.renderMosaicHorizontal = function (layer) {
     var currentPixel = 0;
     var mosaicBlur = ((this.BGMosaicHSize | 0) + 1) | 0;
-    if (mosaicBlur > 1) {    //Don't perform a useless loop.
+    if ((mosaicBlur | 0) > 1) {    //Don't perform a useless loop.
         for (var position = 0; (position | 0) < 240; position = ((position | 0) + 1) | 0) {
             if ((((position | 0) % (mosaicBlur | 0)) | 0) == 0) {
                 currentPixel = layer[position | 0] | 0;
@@ -41,7 +41,7 @@ GameBoyAdvanceMosaicRenderer.prototype.renderOBJMosaicHorizontal = function (lay
     xSize = xSize | 0;
     var currentPixel = this.transparency | 0;
     var mosaicBlur = ((this.OBJMosaicHSize | 0) + 1) | 0;
-    if (mosaicBlur > 1) {    //Don't perform a useless loop.
+    if ((mosaicBlur | 0) > 1) {    //Don't perform a useless loop.
         for (var position = ((xOffset | 0) % (mosaicBlur | 0)) | 0; (position | 0) < (xSize | 0); position = ((position | 0) + 1) | 0) {
             if ((((position | 0) % (mosaicBlur | 0)) | 0) == 0) {
                 currentPixel = layer[position | 0] | 0;

@@ -19,19 +19,20 @@ function GameBoyAdvanceMode1Renderer(gfx) {
     this.gfx = gfx;
 }
 GameBoyAdvanceMode1Renderer.prototype.renderScanLine = function (line) {
-    var BG0Buffer = (this.gfx.displayBG0) ? this.gfx.bg0Renderer.renderScanLine(line) : null;
-    var BG1Buffer = (this.gfx.displayBG1) ? this.gfx.bg1Renderer.renderScanLine(line) : null;
-    var BG2Buffer = (this.gfx.displayBG2) ? this.gfx.bg2MatrixRenderer.renderScanLine(line) : null;
-    var OBJBuffer = (this.gfx.displayOBJ) ? this.gfx.objRenderer.renderScanLine(line) : null;
+    line = line | 0;
+    var BG0Buffer = ((this.gfx.display & 0x1) == 0x1) ? this.gfx.bg0Renderer.renderScanLine(line | 0) : null;
+    var BG1Buffer = ((this.gfx.display & 0x2) == 0x2) ? this.gfx.bg1Renderer.renderScanLine(line | 0) : null;
+    var BG2Buffer = ((this.gfx.display & 0x4) == 0x4) ? this.gfx.bg2MatrixRenderer.renderScanLine(line | 0) : null;
+    var OBJBuffer = ((this.gfx.display & 0x10) == 0x10) ? this.gfx.objRenderer.renderScanLine(line | 0) : null;
     this.gfx.compositeLayers(OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
-    if (this.gfx.displayObjectWindowFlag) {
-        this.gfx.objWindowRenderer.renderScanLine(line, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
+    if ((this.gfx.display & 0x80) == 0x80) {
+        this.gfx.objWindowRenderer.renderScanLine(line | 0, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
     }
-    if (this.gfx.displayWindow1Flag) {
-        this.gfx.window1Renderer.renderScanLine(line, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
+    if ((this.gfx.display & 0x40) == 0x40) {
+        this.gfx.window1Renderer.renderScanLine(line | 0, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
     }
-    if (this.gfx.displayWindow0Flag) {
-        this.gfx.window0Renderer.renderScanLine(line, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
+    if ((this.gfx.display & 0x20) == 0x20) {
+        this.gfx.window0Renderer.renderScanLine(line | 0, this.gfx.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, null);
     }
-    this.gfx.copyLineToFrameBuffer(line);
+    this.gfx.copyLineToFrameBuffer(line | 0);
 }

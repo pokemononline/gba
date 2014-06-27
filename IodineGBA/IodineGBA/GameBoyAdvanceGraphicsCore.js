@@ -30,14 +30,7 @@ GameBoyAdvanceGraphics.prototype.initializeIO = function () {
     this.forcedBlank = true;
     this.isRendering = false;
     this.isOAMRendering = false;
-    this.displayBG0 = false;
-    this.displayBG1 = false;
-    this.displayBG2 = false;
-    this.displayBG3 = false;
-    this.displayOBJ = false;
-    this.displayWindow0Flag = false;
-    this.displayWindow1Flag = false;
-    this.displayObjectWindowFlag = false;
+    this.display = 0;
     this.greenSwap = false;
     this.inVBlank = false;
     this.inHBlank = false;
@@ -55,18 +48,8 @@ GameBoyAdvanceGraphics.prototype.initializeIO = function () {
     this.BGScreenBaseBlock = getUint8Array(0x4);
     this.BGDisplayOverflow = [false, false];
     this.BGScreenSize = getUint8Array(0x4);
-    this.WINBG0Outside = false;
-    this.WINBG1Outside = false;
-    this.WINBG2Outside = false;
-    this.WINBG3Outside = false;
-    this.WINOBJOutside = false;
-    this.WINEffectsOutside = false;
-    this.WINOBJBG0Outside = false;
-    this.WINOBJBG1Outside = false;
-    this.WINOBJBG2Outside = false;
-    this.WINOBJBG3Outside = false;
-    this.WINOBJOBJOutside = false;
-    this.WINOBJEffectsOutside = false;
+    this.WINOutside = 0;
+    this.WINOBJOutside = 0;
     this.paletteRAM = getUint8Array(0x400);
     this.VRAM = getUint8Array(0x18000);
     this.VRAM16 = getUint16View(this.VRAM);
@@ -360,17 +343,17 @@ GameBoyAdvanceGraphics.prototype.isRenderingCheckPreprocess = function () {
     this.isOAMRendering = (isInVisibleLines && (!this.inHBlank || !this.HBlankIntervalFree));
 }
 GameBoyAdvanceGraphics.prototype.compositorPreprocess = function () {
-    this.compositor.preprocess(this.WINEffectsOutside || (!this.displayObjectWindowFlag && !this.displayWindow1Flag && !this.displayWindow0Flag));
+    this.compositor.preprocess((this.WINOutside & 0x20) == 0x20 || (this.display & 0xE0) == 0);
 }
 GameBoyAdvanceGraphics.prototype.compositeLayers = function (OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer) {
     //Arrange our layer stack so we can remove disabled and order for correct edge case priority:
-    if (this.displayObjectWindowFlag || this.displayWindow1Flag || this.displayWindow0Flag) {
+    if ((this.display & 0xE0) > 0) {
         //Window registers can further disable background layers if one or more window layers enabled:
-        OBJBuffer = (this.WINOBJOutside) ? OBJBuffer : null;
-        BG0Buffer = (this.WINBG0Outside) ? BG0Buffer : null;
-        BG1Buffer = (this.WINBG1Outside) ? BG1Buffer : null;
-        BG2Buffer = (this.WINBG2Outside) ? BG2Buffer : null;
-        BG3Buffer = (this.WINBG3Outside) ? BG3Buffer : null;
+        OBJBuffer = ((this.WINOutside & 0x10) == 0x10) ? OBJBuffer : null;
+        BG0Buffer = ((this.WINOutside & 0x1) == 0x1) ? BG0Buffer : null;
+        BG1Buffer = ((this.WINOutside & 0x2) == 0x2) ? BG1Buffer : null;
+        BG2Buffer = ((this.WINOutside & 0x4) == 0x4) ? BG2Buffer : null;
+        BG3Buffer = ((this.WINOutside & 0x8) == 0x8) ? BG3Buffer : null;
     }
     this.compositor.renderScanLine(0, 240, this.lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
 }
@@ -444,25 +427,11 @@ GameBoyAdvanceGraphics.prototype.readDISPCNT0 = function () {
 GameBoyAdvanceGraphics.prototype.writeDISPCNT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
-    this.displayBG0 = ((data & 0x01) == 0x01);
-    this.displayBG1 = ((data & 0x02) == 0x02);
-    this.displayBG2 = ((data & 0x04) == 0x04);
-    this.displayBG3 = ((data & 0x08) == 0x08);
-    this.displayOBJ = ((data & 0x10) == 0x10);
-    this.displayWindow0Flag = ((data & 0x20) == 0x20);
-    this.displayWindow1Flag = ((data & 0x40) == 0x40);
-    this.displayObjectWindowFlag = ((data & 0x80) == 0x80);
+    this.display = data & 0xFF;
     this.compositorPreprocess();
 }
 GameBoyAdvanceGraphics.prototype.readDISPCNT1 = function () {
-    return ((this.displayBG0 ? 0x1 : 0) |
-    (this.displayBG1 ? 0x2 : 0) |
-    (this.displayBG2 ? 0x4 : 0) |
-    (this.displayBG3 ? 0x8 : 0) |
-    (this.displayOBJ ? 0x10 : 0) |
-    (this.displayWindow0Flag ? 0x20 : 0) |
-    (this.displayWindow1Flag ? 0x40 : 0) |
-    (this.displayObjectWindowFlag ? 0x80 : 0));
+    return this.display | 0;
 }
 GameBoyAdvanceGraphics.prototype.writeGreenSwap = function (data) {
     data = data | 0;
@@ -939,40 +908,20 @@ GameBoyAdvanceGraphics.prototype.readWININ1 = function () {
 GameBoyAdvanceGraphics.prototype.writeWINOUT0 = function (data) {
     data = data | 0;
     this.graphicsJIT();
-    this.WINBG0Outside = ((data & 0x01) == 0x01);
-    this.WINBG1Outside = ((data & 0x02) == 0x02);
-    this.WINBG2Outside = ((data & 0x04) == 0x04);
-    this.WINBG3Outside = ((data & 0x08) == 0x08);
-    this.WINOBJOutside = ((data & 0x10) == 0x10);
-    this.WINEffectsOutside = ((data & 0x20) == 0x20);
+    this.WINOutside = data & 0x3F;
     this.compositorPreprocess();
 }
 GameBoyAdvanceGraphics.prototype.readWINOUT0 = function () {
-    return ((this.WINBG0Outside ? 0x1 : 0) |
-    (this.WINBG1Outside ? 0x2 : 0) |
-    (this.WINBG2Outside ? 0x4 : 0) |
-    (this.WINBG3Outside ? 0x8 : 0) |
-    (this.WINOBJOutside ? 0x10 : 0) |
-    (this.WINEffectsOutside ? 0x20 : 0));
+    return this.WINOutside | 0;
 }
 GameBoyAdvanceGraphics.prototype.writeWINOUT1 = function (data) {
     data = data | 0;
     this.graphicsJIT();
-    this.WINOBJBG0Outside = ((data & 0x01) == 0x01);
-    this.WINOBJBG1Outside = ((data & 0x02) == 0x02);
-    this.WINOBJBG2Outside = ((data & 0x04) == 0x04);
-    this.WINOBJBG3Outside = ((data & 0x08) == 0x08);
-    this.WINOBJOBJOutside = ((data & 0x10) == 0x10);
-    this.WINOBJEffectsOutside = ((data & 0x20) == 0x20);
+    this.WINOBJOutside = data & 0x3F;
     this.objWindowRenderer.preprocess();
 }
 GameBoyAdvanceGraphics.prototype.readWINOUT1 = function () {
-    return ((this.WINOBJBG0Outside ? 0x1 : 0) |
-    (this.WINOBJBG1Outside ? 0x2 : 0) |
-    (this.WINOBJBG2Outside ? 0x4 : 0) |
-    (this.WINOBJBG3Outside ? 0x8 : 0) |
-    (this.WINOBJOBJOutside ? 0x10 : 0) |
-    (this.WINOBJEffectsOutside ? 0x20 : 0));
+    return this.WINOBJOutside | 0;
 }
 GameBoyAdvanceGraphics.prototype.writeMOSAIC0 = function (data) {
     data = data | 0;
