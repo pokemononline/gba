@@ -45,7 +45,7 @@ var games = {
     "supermarioadvance":"Super Mario Advance",
     "simpsons":"The Simpsons: Road Rage",
     "sonicpinball":"Sonic Pinball",
-    "super_street_2_fighter_turbo_revival.gba":"Super Street Fighter II: Turbo Revival",
+    "super_street_fighter_2_turbo_revival":"Super Street Fighter II: Turbo Revival",
     "tak2_staff_of_dreams":"Tak 2: The Staff of Dreams",
     "tetris_worlds":"Tetris Worlds",
     "tmnt":"Teenage Mutant Ninja Turtles",
