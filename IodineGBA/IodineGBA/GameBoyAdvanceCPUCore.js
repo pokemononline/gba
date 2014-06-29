@@ -87,8 +87,7 @@ GameBoyAdvanceCPU.prototype.HLEReset = function () {
 GameBoyAdvanceCPU.prototype.executeIRQ = function () {
     //Handle an IRQ:
     this.IRQ();
-    //Execute the CPU stepping normally:
-    this.executeIteration = this.executeBubble;
+    //Continue to bubble the pipeline:
     this.executeBubble();
 }
 GameBoyAdvanceCPU.prototype.executeBubble = function () {
@@ -101,7 +100,10 @@ GameBoyAdvanceCPU.prototype.executeBubble = function () {
         if ((this.pipelineInvalid | 0) == 1) {
             //Change state to normal execution:
             this.pipelineInvalid = 0;
-            this.executeIteration = this.executeIterationRegular;
+            //Make sure we don't cancel any IRQ scheduled:
+            if (!this.processIRQ) {
+                this.executeIteration = this.executeIterationRegular;
+            }
         }
         this.instructionHandle.incrementProgramCounter();
     }
@@ -109,10 +111,6 @@ GameBoyAdvanceCPU.prototype.executeBubble = function () {
 GameBoyAdvanceCPU.prototype.executeIterationRegular = function () {
     //Tick the pipeline of the selected instruction set:
     this.instructionHandle.executeIteration();
-    //Increment the program counter if we didn't just branch:
-    if ((this.pipelineInvalid | 0) < 0x4) {
-        this.instructionHandle.incrementProgramCounter();
-    }
 }
 GameBoyAdvanceCPU.prototype.branch = function (branchTo) {
     branchTo = branchTo | 0;
@@ -122,10 +120,7 @@ GameBoyAdvanceCPU.prototype.branch = function (branchTo) {
         //Mark pipeline as invalid:
         this.pipelineInvalid = 0x4;
         //Check what executor to use:
-        if (this.processIRQ) {
-            this.executeIteration = this.executeIRQ;
-        }
-        else {
+        if (!this.processIRQ) {
             this.executeIteration = this.executeBubble;
         }
         //Next PC fetch has to update the address bus:

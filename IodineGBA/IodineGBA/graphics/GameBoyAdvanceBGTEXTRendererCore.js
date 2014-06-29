@@ -60,7 +60,7 @@ GameBoyAdvanceBGTEXTRenderer.prototype.renderScanLine = function (line) {
     }
     return this.scratchBuffer;
 }
-if (__VIEWS_SUPPORTED__) {
+if (__VIEWS_SUPPORTED__ && navigator.userAgent.toLowerCase().indexOf('chrome') < 0) {
     GameBoyAdvanceBGTEXTRenderer.prototype.renderWholeTiles = function (xTileStart, yTileStart, yTileOffset) {
         xTileStart = xTileStart | 0;
         yTileStart = yTileStart | 0;

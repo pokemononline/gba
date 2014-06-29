@@ -363,6 +363,8 @@ THUMBInstructionSet.prototype.guardHighRegisterWrite = function (data) {
     else {
         //Regular Data Write:
         this.registers[address & 0xF] = data | 0;
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.writeSP = function (data) {
@@ -431,6 +433,8 @@ THUMBInstructionSet.prototype.LSLimm = function () {
     this.CPSR.setZeroInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LSRimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -450,6 +454,8 @@ THUMBInstructionSet.prototype.LSRimm = function () {
     this.CPSR.setZeroInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ASRimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -469,30 +475,40 @@ THUMBInstructionSet.prototype.ASRimm = function () {
     this.CPSR.setZeroInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDreg = function () {
     var operand1 = this.read3OffsetLowRegister() | 0;
     var operand2 = this.read6OffsetLowRegister() | 0;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.SUBreg = function () {
     var operand1 = this.read3OffsetLowRegister() | 0;
     var operand2 = this.read6OffsetLowRegister() | 0;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDimm3 = function () {
     var operand1 = this.read3OffsetLowRegister() | 0;
     var operand2 = (this.execute >> 6) & 0x7;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.SUBimm3 = function () {
     var operand1 = this.read3OffsetLowRegister() | 0;
     var operand2 = (this.execute >> 6) & 0x7;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.MOVimm8 = function () {
     //Get the 8-bit value to move into the register:
@@ -501,24 +517,32 @@ THUMBInstructionSet.prototype.MOVimm8 = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write8OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.CMPimm8 = function () {
     //Compare an 8-bit immediate value with a register:
     var operand1 = this.read8OffsetLowRegister() | 0;
     var operand2 = this.execute & 0xFF;
     this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDimm8 = function () {
     //Add an 8-bit immediate value with a register:
     var operand1 = this.read8OffsetLowRegister() | 0;
     var operand2 = this.execute & 0xFF;
     this.write8OffsetLowRegister(this.CPSR.setADDFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.SUBimm8 = function () {
     //Subtract an 8-bit immediate value from a register:
     var operand1 = this.read8OffsetLowRegister() | 0;
     var operand2 = this.execute & 0xFF;
     this.write8OffsetLowRegister(this.CPSR.setSUBFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.AND = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -529,6 +553,8 @@ THUMBInstructionSet.prototype.AND = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.EOR = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -539,6 +565,8 @@ THUMBInstructionSet.prototype.EOR = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LSL = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
@@ -566,6 +594,8 @@ THUMBInstructionSet.prototype.LSL = function () {
     this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LSR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
@@ -593,6 +623,8 @@ THUMBInstructionSet.prototype.LSR = function () {
     this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ASR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
@@ -615,18 +647,24 @@ THUMBInstructionSet.prototype.ASR = function () {
     this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADC = function () {
     var operand1 = this.read0OffsetLowRegister() | 0;
     var operand2 = this.read3OffsetLowRegister() | 0;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setADCFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.SBC = function () {
     var operand1 = this.read0OffsetLowRegister() | 0;
     var operand2 = this.read3OffsetLowRegister() | 0;
     //Update destination register:
     this.write0OffsetLowRegister(this.CPSR.setSBCFlags(operand1 | 0, operand2 | 0) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ROR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
@@ -648,6 +686,8 @@ THUMBInstructionSet.prototype.ROR = function () {
     this.CPSR.setZeroInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.TST = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -656,6 +696,8 @@ THUMBInstructionSet.prototype.TST = function () {
     var result = source & destination;
     this.CPSR.setNegativeInt(result | 0);
     this.CPSR.setZeroInt(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.NEG = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -666,18 +708,24 @@ THUMBInstructionSet.prototype.NEG = function () {
     this.CPSR.setZeroInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.CMP = function () {
     //Compare two registers:
     var operand1 = this.read0OffsetLowRegister() | 0;
     var operand2 = this.read3OffsetLowRegister() | 0;
     this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.CMN = function () {
     //Compare two registers:
     var operand1 = this.read0OffsetLowRegister() | 0;
     var operand2 = this.read3OffsetLowRegister() | 0;
     this.CPSR.setCMNFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ORR = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -688,6 +736,8 @@ THUMBInstructionSet.prototype.ORR = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.MUL = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -699,6 +749,8 @@ THUMBInstructionSet.prototype.MUL = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.BIC = function () {
     var source = this.read3OffsetLowRegister() | 0;
@@ -709,6 +761,8 @@ THUMBInstructionSet.prototype.BIC = function () {
     this.CPSR.setZeroInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.MVN = function () {
     //Perform bitwise NOT on source:
@@ -717,6 +771,8 @@ THUMBInstructionSet.prototype.MVN = function () {
     this.CPSR.setZeroInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDH_LH = function () {
     var operand1 = this.read0OffsetLowRegister() | 0;
@@ -724,6 +780,8 @@ THUMBInstructionSet.prototype.ADDH_LH = function () {
     //Perform Addition:
     //Update destination register:
     this.write0OffsetLowRegister(((operand1 | 0) + (operand2 | 0)) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDH_HL = function () {
     var operand1 = this.readHighRegister(this.execute | 0) | 0;
@@ -744,22 +802,30 @@ THUMBInstructionSet.prototype.CMPH_LH = function () {
     var operand1 = this.read0OffsetLowRegister() | 0;
     var operand2 = this.readHighRegister(this.execute >> 3) | 0;
     this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.CMPH_HL = function () {
     //Compare two registers:
     var operand1 = this.readHighRegister(this.execute | 0) | 0;
     var operand2 = this.read3OffsetLowRegister() | 0;
     this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.CMPH_HH = function () {
     //Compare two registers:
     var operand1 = this.readHighRegister(this.execute | 0) | 0;
     var operand2 = this.readHighRegister(this.execute >> 3) | 0;
     this.CPSR.setCMPFlags(operand1 | 0, operand2 | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.MOVH_LH = function () {
     //Move a register to another register:
     this.write0OffsetLowRegister(this.readHighRegister(this.execute >> 3) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.MOVH_HL = function () {
     //Move a register to another register:
@@ -799,96 +865,134 @@ THUMBInstructionSet.prototype.LDRPC = function () {
     //PC-Relative Load
     var data = this.CPUCore.read32(((this.readPC() & -3) + ((this.execute & 0xFF) << 2)) | 0) | 0;
     this.write8OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRreg = function () {
     //Store Word From Register
     var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write32(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRHreg = function () {
     //Store Half-Word From Register
     var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write16(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRBreg = function () {
     //Store Byte From Register
     var address = ((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write8(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRSBreg = function () {
     //Load Signed Byte Into Register
     var data = (this.CPUCore.read8(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) << 24) >> 24;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRreg = function () {
     //Load Word Into Register
     var data = this.CPUCore.read32(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRHreg = function () {
     //Load Half-Word Into Register
     var data = this.CPUCore.read16(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRBreg = function () {
     //Load Byte Into Register
     var data = this.CPUCore.read8(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRSHreg = function () {
     //Load Signed Half-Word Into Register
     var data = (this.CPUCore.read16(((this.read6OffsetLowRegister() | 0) + (this.read3OffsetLowRegister() | 0)) | 0) << 16) >> 16;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRimm5 = function () {
     //Store Word From Register
     var address = (((this.execute >> 4) & 0x7C) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write32(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRimm5 = function () {
     //Load Word Into Register
     var data = this.CPUCore.read32((((this.execute >> 4) & 0x7C) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRBimm5 = function () {
     //Store Byte From Register
     var address = (((this.execute >> 6) & 0x1F) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write8(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRBimm5 = function () {
     //Load Byte Into Register
     var data = this.CPUCore.read8((((this.execute >> 6) & 0x1F) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRHimm5 = function () {
     //Store Half-Word From Register
     var address = (((this.execute >> 5) & 0x3E) + (this.read3OffsetLowRegister() | 0)) | 0;
     this.CPUCore.write16(address | 0, this.read0OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRHimm5 = function () {
     //Load Half-Word Into Register
     var data = this.CPUCore.read16((((this.execute >> 5) & 0x3E) + (this.read3OffsetLowRegister() | 0)) | 0) | 0;
     this.write0OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.STRSP = function () {
     //Store Word From Register
     var address = (((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0;
     this.CPUCore.write32(address | 0, this.read8OffsetLowRegister() | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDRSP = function () {
     //Load Word Into Register
     var data = this.CPUCore.read32((((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0) | 0;
     this.write8OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDPC = function () {
     //Add PC With Offset Into Register
     var data = ((this.readPC() & -3) + ((this.execute & 0xFF) << 2)) | 0;
     this.write8OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDSP = function () {
     //Add SP With Offset Into Register
     var data = (((this.execute & 0xFF) << 2) + (this.readSP() | 0)) | 0;
     this.write8OffsetLowRegister(data | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.ADDSPimm7 = function () {
     //Add Signed Offset Into SP
@@ -898,6 +1002,8 @@ THUMBInstructionSet.prototype.ADDSPimm7 = function () {
     else {
         this.writeSP(((this.readSP() | 0) + ((this.execute & 0x7F) << 2)) | 0);
     }
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.PUSH = function () {
     //Only initialize the PUSH sequence if the register list is non-empty:
@@ -915,6 +1021,8 @@ THUMBInstructionSet.prototype.PUSH = function () {
         //Updating the address bus back to PC fetch:
         this.wait.NonSequentialBroadcast();
     }
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.PUSHlr = function () {
     //Updating the address bus away from PC fetch:
@@ -932,6 +1040,8 @@ THUMBInstructionSet.prototype.PUSHlr = function () {
     }
     //Updating the address bus back to PC fetch:
     this.wait.NonSequentialBroadcast();
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.POP = function () {
     //Only initialize the POP sequence if the register list is non-empty:
@@ -949,6 +1059,8 @@ THUMBInstructionSet.prototype.POP = function () {
         //Updating the address bus back to PC fetch:
         this.wait.NonSequentialBroadcast();
     }
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.POPpc = function () {
     //Updating the address bus away from PC fetch:
@@ -987,6 +1099,8 @@ THUMBInstructionSet.prototype.STMIA = function () {
         //Updating the address bus back to PC fetch:
         this.wait.NonSequentialBroadcast();
     }
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.LDMIA = function () {
     //Only initialize the LDMIA sequence if the register list is non-empty:
@@ -1008,11 +1122,17 @@ THUMBInstructionSet.prototype.LDMIA = function () {
         //Updating the address bus back to PC fetch:
         this.wait.NonSequentialBroadcast();
     }
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.BEQ = function () {
     //Branch if EQual:
     if (this.CPSR.getZero()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BNE = function () {
@@ -1020,11 +1140,19 @@ THUMBInstructionSet.prototype.BNE = function () {
     if (!this.CPSR.getZero()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BCS = function () {
     //Branch if Carry Set:
     if (this.CPSR.getCarry()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BCC = function () {
@@ -1032,11 +1160,19 @@ THUMBInstructionSet.prototype.BCC = function () {
     if (!this.CPSR.getCarry()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BMI = function () {
     //Branch if Negative Set:
     if (this.CPSR.getNegative()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BPL = function () {
@@ -1044,11 +1180,19 @@ THUMBInstructionSet.prototype.BPL = function () {
     if (!this.CPSR.getNegative()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BVS = function () {
     //Branch if Overflow Set:
     if (this.CPSR.getOverflow()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BVC = function () {
@@ -1056,11 +1200,19 @@ THUMBInstructionSet.prototype.BVC = function () {
     if (!this.CPSR.getOverflow()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BHI = function () {
     //Branch if Carry & Non-Zero:
     if (this.CPSR.getCarry() && !this.CPSR.getZero()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BLS = function () {
@@ -1068,11 +1220,19 @@ THUMBInstructionSet.prototype.BLS = function () {
     if (!this.CPSR.getCarry() || this.CPSR.getZero()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BGE = function () {
     //Branch if Negative equal to Overflow
     if (this.CPSR.getNegative() == this.CPSR.getOverflow()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.BLT = function () {
@@ -1080,17 +1240,29 @@ THUMBInstructionSet.prototype.BLT = function () {
     if (this.CPSR.getNegative() != this.CPSR.getOverflow()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BGT = function () {
     //Branch if Zero Clear and Negative equal to Overflow
     if (!this.CPSR.getZero() && this.CPSR.getNegative() == this.CPSR.getOverflow()) {
         this.offsetPC();
     }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
+    }
 }
 THUMBInstructionSet.prototype.BLE = function () {
     //Branch if Zero Set or Negative NOT equal to Overflow
     if (this.CPSR.getZero() || this.CPSR.getNegative() != this.CPSR.getOverflow()) {
         this.offsetPC();
+    }
+    else {
+        //Update PC:
+        this.incrementProgramCounter();
     }
 }
 THUMBInstructionSet.prototype.SWI = function () {
@@ -1106,6 +1278,8 @@ THUMBInstructionSet.prototype.BLsetup = function () {
     //Brank with Link (High offset)
     //Update the link register to branch address:
     this.writeLR(((this.readPC() | 0) + (((this.execute & 0x7FF) << 21) >> 9)) | 0);
+    //Update PC:
+    this.incrementProgramCounter();
 }
 THUMBInstructionSet.prototype.BLoff = function () {
     //Brank with Link (Low offset)
