@@ -203,6 +203,9 @@ ARMInstructionSet.prototype.getIRQLR = function () {
 ARMInstructionSet.prototype.getCurrentFetchValue = function () {
     return this.fetch | 0;
 }
+ARMInstructionSet.prototype.getSWICode = function () {
+    return (this.execute >> 16) & 0xFF;
+}
 ARMInstructionSet.prototype.writeRegister = function (address, data) {
     //Unguarded non-pc register write:
     address = address | 0;
@@ -227,6 +230,59 @@ ARMInstructionSet.prototype.guardRegisterWrite = function (address, data) {
         //We performed a branch:
         this.CPUCore.branch(data & -4);
     }
+}
+ARMInstructionSet.prototype.multiplyGuard12OffsetRegisterWrite = function (data) {
+    //Writes to R15 ignored in the multiply instruction!
+    data = data | 0;
+    var address = (this.execute >> 0xC) & 0xF;
+    if ((address | 0) != 0xF) {
+        this.writeRegister(address | 0, data | 0);
+    }
+}
+ARMInstructionSet.prototype.multiplyGuard16OffsetRegisterWrite = function (data) {
+    //Writes to R15 ignored in the multiply instruction!
+    data = data | 0;
+    var address = (this.execute >> 0x10) & 0xF;
+    this.incrementProgramCounter();
+    if ((address | 0) != 0xF) {
+        this.writeRegister(address | 0, data | 0);
+    }
+}
+ARMInstructionSet.prototype.performMUL32 = function () {
+    var result = 0;
+    if (((this.execute >> 16) & 0xF) != (this.execute & 0xF)) {
+        /*
+         http://www.chiark.greenend.org.uk/~theom/riscos/docs/ultimate/a252armc.txt
+         
+         Due to the way that Booth's algorithm has been implemented, certain
+         combinations of operand registers should be avoided. (The assembler will
+         issue a warning if these restrictions are overlooked.)
+         The destination register (Rd) should not be the same as the Rm operand
+         register, as Rd is used to hold intermediate values and Rm is used
+         repeatedly during the multiply. A MUL will give a zero result if Rm=Rd, and
+         a MLA will give a meaningless result.
+         */
+        result = this.CPUCore.performMUL32(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
+    }
+    return result | 0;
+}
+ARMInstructionSet.prototype.performMUL32MLA = function () {
+    var result = 0;
+    if (((this.execute >> 16) & 0xF) != (this.execute & 0xF)) {
+        /*
+         http://www.chiark.greenend.org.uk/~theom/riscos/docs/ultimate/a252armc.txt
+         
+         Due to the way that Booth's algorithm has been implemented, certain
+         combinations of operand registers should be avoided. (The assembler will
+         issue a warning if these restrictions are overlooked.)
+         The destination register (Rd) should not be the same as the Rm operand
+         register, as Rd is used to hold intermediate values and Rm is used
+         repeatedly during the multiply. A MUL will give a zero result if Rm=Rd, and
+         a MLA will give a meaningless result.
+         */
+        result = this.CPUCore.performMUL32MLA(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
+    }
+    return result | 0;
 }
 ARMInstructionSet.prototype.guard12OffsetRegisterWrite = function (data) {
     data = data | 0;
@@ -1021,52 +1077,44 @@ ARMInstructionSet.prototype.MSR4 = function () {
 }
 ARMInstructionSet.prototype.MUL = function () {
     //Perform multiplication:
-    var result = this.CPUCore.performMUL32(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
-    //Increment PC:
-    this.incrementProgramCounter();
+    var result = this.performMUL32() | 0;
     //Update destination register:
-    this.guard16OffsetRegisterWrite(result | 0);
+    this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
 ARMInstructionSet.prototype.MULS = function () {
     //Perform multiplication:
-    var result = this.CPUCore.performMUL32(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
+    var result = this.performMUL32() | 0;
     this.CPSR.setCarryFalse();
     this.CPSR.setNegativeInt(result | 0);
     this.CPSR.setZeroInt(result | 0);
-    //Increment PC:
-    this.incrementProgramCounter();
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(result | 0);
+    this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
 ARMInstructionSet.prototype.MLA = function () {
     //Perform multiplication:
-    var result = this.CPUCore.performMUL32MLA(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
+    var result = this.performMUL32MLA() | 0;
     //Perform addition:
     result = ((result | 0) + (this.read12OffsetRegister() | 0)) | 0;
-    //Increment PC:
-    this.incrementProgramCounter();
     //Update destination register:
-    this.guard16OffsetRegisterWrite(result | 0);
+    this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
 ARMInstructionSet.prototype.MLAS = function () {
     //Perform multiplication:
-    var result = this.CPUCore.performMUL32MLA(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0) | 0;
+    var result = this.performMUL32MLA() | 0;
     //Perform addition:
     result = ((result | 0) + (this.read12OffsetRegister() | 0)) | 0;
     this.CPSR.setCarryFalse();
     this.CPSR.setNegativeInt(result | 0);
     this.CPSR.setZeroInt(result | 0);
-    //Increment PC:
-    this.incrementProgramCounter();
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(result | 0);
+    this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
 ARMInstructionSet.prototype.UMULL = function () {
     //Perform multiplication:
     this.CPUCore.performUMUL64(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0);
     //Update destination register:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.UMULLS = function () {
     //Perform multiplication:
@@ -1075,15 +1123,15 @@ ARMInstructionSet.prototype.UMULLS = function () {
     this.CPSR.setNegativeInt(this.CPUCore.mul64ResultHigh | 0);
     this.CPSR.setZero((this.CPUCore.mul64ResultHigh | 0) == 0 && (this.CPUCore.mul64ResultLow | 0) == 0);
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.UMLAL = function () {
     //Perform multiplication:
     this.CPUCore.performUMLA64(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0, this.read16OffsetRegister() | 0, this.read12OffsetRegister() | 0);
     //Update destination register:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.UMLALS = function () {
     //Perform multiplication:
@@ -1092,15 +1140,15 @@ ARMInstructionSet.prototype.UMLALS = function () {
     this.CPSR.setNegativeInt(this.CPUCore.mul64ResultHigh | 0);
     this.CPSR.setZero((this.CPUCore.mul64ResultHigh | 0) == 0 && (this.CPUCore.mul64ResultLow | 0) == 0);
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.SMULL = function () {
     //Perform multiplication:
     this.CPUCore.performMUL64(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0);
     //Update destination register:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.SMULLS = function () {
     //Perform multiplication:
@@ -1109,15 +1157,15 @@ ARMInstructionSet.prototype.SMULLS = function () {
     this.CPSR.setNegativeInt(this.CPUCore.mul64ResultHigh | 0);
     this.CPSR.setZero((this.CPUCore.mul64ResultHigh | 0) == 0 && (this.CPUCore.mul64ResultLow | 0) == 0);
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.SMLAL = function () {
     //Perform multiplication:
     this.CPUCore.performMLA64(this.read0OffsetRegister() | 0, this.read8OffsetRegister() | 0, this.read16OffsetRegister() | 0, this.read12OffsetRegister() | 0);
     //Update destination register:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.SMLALS = function () {
     //Perform multiplication:
@@ -1126,8 +1174,8 @@ ARMInstructionSet.prototype.SMLALS = function () {
     this.CPSR.setNegativeInt(this.CPUCore.mul64ResultHigh | 0);
     this.CPSR.setZero((this.CPUCore.mul64ResultHigh | 0) == 0 && (this.CPUCore.mul64ResultLow | 0) == 0);
     //Update destination register and guard CPSR for PC:
-    this.guard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
-    this.guard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
+    this.multiplyGuard16OffsetRegisterWrite(this.CPUCore.mul64ResultHigh | 0);
+    this.multiplyGuard12OffsetRegisterWrite(this.CPUCore.mul64ResultLow | 0);
 }
 ARMInstructionSet.prototype.STRH = function () {
     //Perform halfword store calculations:

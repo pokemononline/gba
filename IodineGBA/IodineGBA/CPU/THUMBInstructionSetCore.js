@@ -419,6 +419,9 @@ THUMBInstructionSet.prototype.readPC = function () {
 THUMBInstructionSet.prototype.getCurrentFetchValue = function () {
     return this.fetch | (this.fetch << 16);
 }
+THUMBInstructionSet.prototype.getSWICode = function () {
+    return this.execute & 0xFF;
+}
 THUMBInstructionSet.prototype.LSLimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
     var offset = (this.execute >> 6) & 0x1F;
