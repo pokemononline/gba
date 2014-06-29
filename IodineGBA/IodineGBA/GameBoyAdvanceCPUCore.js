@@ -267,6 +267,7 @@ GameBoyAdvanceCPU.prototype.SWI = function () {
         this.branch(0x8);
     }
     else {
+        this.instructionHandle.incrementProgramCounter();
         //HLE the SWI command:
         this.swi.execute(this.read8((this.getLR() - 2) | 0));
     }
@@ -285,6 +286,10 @@ GameBoyAdvanceCPU.prototype.UNDEFINED = function () {
         this.enterARM();
         //Undefined exception vector:
         this.branch(0x4);
+    }
+    else {
+        //Pretend we didn't execute the bad instruction then:
+        this.instructionHandle.incrementProgramCounter();
     }
 }
 GameBoyAdvanceCPU.prototype.SPSRtoCPSR = function () {
