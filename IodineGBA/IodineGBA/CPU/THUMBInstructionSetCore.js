@@ -425,15 +425,14 @@ THUMBInstructionSet.prototype.getSWICode = function () {
 THUMBInstructionSet.prototype.LSLimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
     var offset = (this.execute >> 6) & 0x1F;
-    if (offset > 0) {
+    if ((offset | 0) > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        this.CPSR.setCarry((source << ((offset - 1) | 0)) < 0);
+        this.CPSR.setCarryInt(source << (((offset | 0) - 1) | 0));
         //Perform shift:
-        source <<= offset;
+        source = source << (offset | 0);
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(source | 0);
-    this.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNZInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
     //Update PC:
@@ -442,19 +441,18 @@ THUMBInstructionSet.prototype.LSLimm = function () {
 THUMBInstructionSet.prototype.LSRimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
     var offset = (this.execute >> 6) & 0x1F;
-    if (offset > 0) {
+    if ((offset | 0) > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        this.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
+        this.CPSR.setCarryInt((source >> (((offset | 0) - 1) | 0)) << 31);
         //Perform shift:
-        source = (source >>> offset) | 0;
+        source = (source >>> (offset | 0)) | 0;
     }
     else {
-        this.CPSR.setCarry(source < 0);
+        this.CPSR.setCarryInt(source | 0);
         source = 0;
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(source | 0);
-    this.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNZInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
     //Update PC:
@@ -463,19 +461,18 @@ THUMBInstructionSet.prototype.LSRimm = function () {
 THUMBInstructionSet.prototype.ASRimm = function () {
     var source = this.read3OffsetLowRegister() | 0;
     var offset = (this.execute >> 6) & 0x1F;
-    if (offset > 0) {
+    if ((offset | 0) > 0) {
         //CPSR Carry is set by the last bit shifted out:
-        this.CPSR.setCarry(((source >> ((offset - 1) | 0)) & 0x1) != 0);
+        this.CPSR.setCarryInt((source >> (((offset | 0) - 1) | 0)) << 31);
         //Perform shift:
-        source >>= offset;
+        source = source >> (offset | 0);
     }
     else {
-        this.CPSR.setCarry(source < 0);
-        source >>= 0x1F;
+        this.CPSR.setCarryInt(source | 0);
+        source = source >> 0x1F;
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(source | 0);
-    this.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNZInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
     //Update PC:
@@ -552,8 +549,7 @@ THUMBInstructionSet.prototype.AND = function () {
     var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND:
     var result = source & destination;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
     //Update PC:
@@ -564,8 +560,7 @@ THUMBInstructionSet.prototype.EOR = function () {
     var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise EOR:
     var result = source ^ destination;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
     //Update PC:
@@ -575,15 +570,15 @@ THUMBInstructionSet.prototype.LSL = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
     var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
-    if (source > 0) {
-        if (source < 0x20) {
+    if ((source | 0) > 0) {
+        if ((source | 0) < 0x20) {
             //Shift the register data left:
-            this.CPSR.setCarry((destination << ((source - 1) | 0)) < 0);
-            destination <<= source;
+            this.CPSR.setCarryInt(destination << (((source | 0) - 1) | 0));
+            destination = destination << (source | 0);
         }
-        else if (source == 0x20) {
+        else if ((source | 0) == 0x20) {
             //Shift bit 0 into carry:
-            this.CPSR.setCarry((destination & 0x1) == 0x1);
+            this.CPSR.setCarryInt(destination << 31);
             destination = 0;
         }
         else {
@@ -593,8 +588,7 @@ THUMBInstructionSet.prototype.LSL = function () {
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(destination | 0);
-    this.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNZInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
     //Update PC:
@@ -604,15 +598,15 @@ THUMBInstructionSet.prototype.LSR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
     var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
-    if (source > 0) {
-        if (source < 0x20) {
+    if ((source | 0) > 0) {
+        if ((source | 0) < 0x20) {
             //Shift the register data right logically:
-            this.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
-            destination = (destination >>> source) | 0;
+            this.CPSR.setCarryInt((destination >> (((source | 0) - 1) | 0)) << 31);
+            destination = (destination >>> (source | 0)) | 0;
         }
         else if (source == 0x20) {
             //Shift bit 31 into carry:
-            this.CPSR.setCarry(destination < 0);
+            this.CPSR.setCarryInt(destination | 0);
             destination = 0;
         }
         else {
@@ -622,8 +616,7 @@ THUMBInstructionSet.prototype.LSR = function () {
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(destination | 0);
-    this.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNZInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
     //Update PC:
@@ -633,21 +626,20 @@ THUMBInstructionSet.prototype.ASR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
     var destination = this.read0OffsetLowRegister() | 0;
     //Check to see if we need to update CPSR:
-    if (source > 0) {
-        if (source < 0x20) {
+    if ((source | 0) > 0) {
+        if ((source | 0) < 0x20) {
             //Shift the register data right arithmetically:
-            this.CPSR.setCarry(((destination >> ((source - 1) | 0)) & 0x1) == 0x1);
-            destination >>= source;
+            this.CPSR.setCarryInt((destination >> (((source | 0) - 1) | 0)) << 31);
+            destination = destination >> (source | 0);
         }
         else {
             //Set all bits with bit 31:
-            this.CPSR.setCarry(destination < 0);
-            destination >>= 0x1F;
+            this.CPSR.setCarryInt(destination | 0);
+            destination = destination >> 0x1F;
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(destination | 0);
-    this.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNZInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
     //Update PC:
@@ -672,21 +664,20 @@ THUMBInstructionSet.prototype.SBC = function () {
 THUMBInstructionSet.prototype.ROR = function () {
     var source = this.read3OffsetLowRegister() & 0xFF;
     var destination = this.read0OffsetLowRegister() | 0;
-    if (source > 0) {
-        source &= 0x1F;
-        if (source > 0) {
+    if ((source | 0) > 0) {
+        source = source & 0x1F;
+        if ((source | 0) > 0) {
             //CPSR Carry is set by the last bit shifted out:
-            this.CPSR.setCarry(((destination >>> ((source - 1) | 0)) & 0x1) != 0);
+            this.CPSR.setCarryInt((destination >> ((source - 1) | 0)) << 31);
             //Perform rotate:
-            destination = (destination << ((0x20 - source) | 0)) | (destination >>> (source | 0));
+            destination = (destination << ((0x20 - (source | 0)) | 0)) | (destination >>> (source | 0));
         }
         else {
-            this.CPSR.setCarry(destination < 0);
+            this.CPSR.setCarryInt(destination | 0);
         }
     }
     //Perform CPSR updates for N and Z (But not V):
-    this.CPSR.setNegativeInt(destination | 0);
-    this.CPSR.setZeroInt(destination | 0);
+    this.CPSR.setNZInt(destination | 0);
     //Update destination register:
     this.write0OffsetLowRegister(destination | 0);
     //Update PC:
@@ -697,8 +688,7 @@ THUMBInstructionSet.prototype.TST = function () {
     var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND:
     var result = source & destination;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update PC:
     this.incrementProgramCounter();
 }
@@ -707,8 +697,7 @@ THUMBInstructionSet.prototype.NEG = function () {
     this.CPSR.setOverflow((source ^ (-(source | 0))) == 0);
     //Perform Subtraction:
     source = (-(source | 0)) | 0;
-    this.CPSR.setNegativeInt(source | 0);
-    this.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNZInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
     //Update PC:
@@ -735,8 +724,7 @@ THUMBInstructionSet.prototype.ORR = function () {
     var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise OR:
     var result = source | destination;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
     //Update PC:
@@ -748,8 +736,7 @@ THUMBInstructionSet.prototype.MUL = function () {
     //Perform MUL32:
     var result = this.CPUCore.performMUL32(source | 0, destination | 0, 0) | 0;
     this.CPSR.setCarryFalse();
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
     //Update PC:
@@ -760,8 +747,7 @@ THUMBInstructionSet.prototype.BIC = function () {
     var destination = this.read0OffsetLowRegister() | 0;
     //Perform bitwise AND with a bitwise NOT on source:
     var result = (~source) & destination;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register:
     this.write0OffsetLowRegister(result | 0);
     //Update PC:
@@ -770,8 +756,7 @@ THUMBInstructionSet.prototype.BIC = function () {
 THUMBInstructionSet.prototype.MVN = function () {
     //Perform bitwise NOT on source:
     var source = ~this.read3OffsetLowRegister();
-    this.CPSR.setNegativeInt(source | 0);
-    this.CPSR.setZeroInt(source | 0);
+    this.CPSR.setNZInt(source | 0);
     //Update destination register:
     this.write0OffsetLowRegister(source | 0);
     //Update PC:

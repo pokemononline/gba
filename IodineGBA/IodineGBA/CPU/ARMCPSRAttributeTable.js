@@ -66,6 +66,9 @@ function ARMCPSRAttributeTable() {
     function setCarry(toSet) {
         carry = !!toSet;
     };
+    function setCarryInt(toSet) {
+        carry = ((toSet | 0) < 0);
+    };
     function setCarryFalse() {
         carry = false;
     };
@@ -88,6 +91,11 @@ function ARMCPSRAttributeTable() {
             return 1;
         }
     };
+    function setNZInt(toSet) {
+        toSet = toSet | 0;
+        negative = toSet | 0;
+        zero = toSet | 0;
+    }
     function setVFlagForADD(operand1, operand2, result) {
         //Compute the overflow flag for addition:
         operand1 = operand1 | 0;
@@ -187,10 +195,12 @@ function ARMCPSRAttributeTable() {
         "setOverflow":setOverflow,
         "getOverflow":getOverflow,
         "setCarry":setCarry,
+        "setCarryInt":setCarryInt,
         "setCarryFalse":setCarryFalse,
         "getCarry":getCarry,
         "getCarryInt":getCarryInt,
         "getCarryIntReverse":getCarryIntReverse,
+        "setNZInt":setNZInt,
         "setADDFlags":setADDFlags,
         "setADCFlags":setADCFlags,
         "setSUBFlags":setSUBFlags,

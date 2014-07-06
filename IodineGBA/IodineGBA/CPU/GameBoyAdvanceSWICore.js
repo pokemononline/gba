@@ -491,9 +491,13 @@ GameBoyAdvanceSWI.prototype.BitUnPack = function () {
     }
 }
 GameBoyAdvanceSWI.prototype.LZ77UnCompWram = function () {
+    var source = this.CPUCore.registers[0];
+    var destination = this.CPUCore.registers[1];
     
 }
 GameBoyAdvanceSWI.prototype.LZ77UnCompVram = function () {
+    var source = this.CPUCore.registers[0];
+    var destination = this.CPUCore.registers[1];
     
 }
 GameBoyAdvanceSWI.prototype.HuffUnComp = function () {

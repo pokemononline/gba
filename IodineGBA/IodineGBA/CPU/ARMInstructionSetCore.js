@@ -520,8 +520,7 @@ ARMInstructionSet.prototype.ANDS = function () {
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(result | 0);
 }
@@ -532,8 +531,7 @@ ARMInstructionSet.prototype.ANDS2 = function () {
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(result | 0);
 }
@@ -558,8 +556,7 @@ ARMInstructionSet.prototype.EORS = function () {
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform bitwise EOR:
     var result = operand1 ^ operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(result | 0);
 }
@@ -570,8 +567,7 @@ ARMInstructionSet.prototype.EORS2 = function () {
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform bitwise EOR:
     var result = operand1 ^ operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(result | 0);
 }
@@ -760,8 +756,7 @@ ARMInstructionSet.prototype.TSTS = function () {
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Increment PC:
     this.incrementProgramCounter();
 }
@@ -772,16 +767,14 @@ ARMInstructionSet.prototype.TSTS2 = function () {
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
 }
 ARMInstructionSet.prototype.TEQS = function () {
     var operand1 = this.read16OffsetRegister() | 0;
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform bitwise EOR:
     var result = operand1 ^ operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Increment PC:
     this.incrementProgramCounter();
 }
@@ -792,8 +785,7 @@ ARMInstructionSet.prototype.TEQS2 = function () {
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform bitwise EOR:
     var result = operand1 ^ operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
 }
 ARMInstructionSet.prototype.CMPS = function () {
     var operand1 = this.read16OffsetRegister() | 0;
@@ -844,8 +836,7 @@ ARMInstructionSet.prototype.ORRS = function () {
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform bitwise OR:
     var result = operand1 | operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(result | 0);
 }
@@ -856,8 +847,7 @@ ARMInstructionSet.prototype.ORRS2 = function () {
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform bitwise OR:
     var result = operand1 | operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(result | 0);
 }
@@ -876,8 +866,7 @@ ARMInstructionSet.prototype.MOV2 = function () {
 ARMInstructionSet.prototype.MOVS = function () {
     var operand2 = this.operand2OP_DataProcessing2() | 0;
     //Perform move:
-    this.CPSR.setNegativeInt(operand2 | 0);
-    this.CPSR.setZeroInt(operand2 | 0);
+    this.CPSR.setNZInt(operand2 | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(operand2 | 0);
 }
@@ -886,8 +875,7 @@ ARMInstructionSet.prototype.MOVS2 = function () {
     this.incrementProgramCounter();
     var operand2 = this.operand2OP_DataProcessing4() | 0;
     //Perform move:
-    this.CPSR.setNegativeInt(operand2 | 0);
-    this.CPSR.setZeroInt(operand2 | 0);
+    this.CPSR.setNZInt(operand2 | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(operand2 | 0);
 }
@@ -915,8 +903,7 @@ ARMInstructionSet.prototype.BICS = function () {
     var operand2 = ~this.operand2OP_DataProcessing2();
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(result | 0);
 }
@@ -928,8 +915,7 @@ ARMInstructionSet.prototype.BICS2 = function () {
     var operand2 = ~this.operand2OP_DataProcessing4();
     //Perform bitwise AND:
     var result = operand1 & operand2;
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(result | 0);
 }
@@ -948,8 +934,7 @@ ARMInstructionSet.prototype.MVN2 = function () {
 ARMInstructionSet.prototype.MVNS = function () {
     var operand2 = ~this.operand2OP_DataProcessing2();
     //Perform move negative:
-    this.CPSR.setNegativeInt(operand2 | 0);
-    this.CPSR.setZeroInt(operand2 | 0);
+    this.CPSR.setNZInt(operand2 | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR(operand2 | 0);
 }
@@ -958,8 +943,7 @@ ARMInstructionSet.prototype.MVNS2 = function () {
     this.incrementProgramCounter();
     var operand2 = ~this.operand2OP_DataProcessing4();
     //Perform move negative:
-    this.CPSR.setNegativeInt(operand2 | 0);
-    this.CPSR.setZeroInt(operand2 | 0);
+    this.CPSR.setNZInt(operand2 | 0);
     //Update destination register and guard CPSR for PC:
     this.guard12OffsetRegisterWriteCPSR2(operand2 | 0);
 }
@@ -999,7 +983,7 @@ ARMInstructionSet.prototype.MSR1 = function () {
     var newcpsr = this.readRegister(this.execute & 0xF) | 0;
     this.CPSR.setNegativeInt(newcpsr | 0);
     this.CPSR.setZero((newcpsr & 0x40000000) != 0);
-    this.CPSR.setCarry((newcpsr & 0x20000000) != 0);
+    this.CPSR.setCarryInt((newcpsr & 0x20000000) << 2);
     this.CPSR.setOverflow((newcpsr & 0x10000000) != 0);
     if ((this.execute & 0x10000) == 0x10000 && (this.CPUCore.MODEBits | 0) != 0x10) {
         this.CPUCore.IRQDisabled = ((newcpsr & 0x80) != 0);
@@ -1046,7 +1030,7 @@ ARMInstructionSet.prototype.MSR3 = function () {
     var operand = this.imm() | 0;
     this.CPSR.setNegativeInt(operand | 0);
     this.CPSR.setZero((operand & 0x40000000) != 0);
-    this.CPSR.setCarry((operand & 0x20000000) != 0);
+    this.CPSR.setCarryInt((operand & 0x20000000) << 2);
     this.CPSR.setOverflow((operand & 0x10000000) != 0);
 }
 ARMInstructionSet.prototype.MSR4 = function () {
@@ -1085,8 +1069,7 @@ ARMInstructionSet.prototype.MULS = function () {
     //Perform multiplication:
     var result = this.performMUL32() | 0;
     this.CPSR.setCarryFalse();
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
@@ -1104,8 +1087,7 @@ ARMInstructionSet.prototype.MLAS = function () {
     //Perform addition:
     result = ((result | 0) + (this.read12OffsetRegister() | 0)) | 0;
     this.CPSR.setCarryFalse();
-    this.CPSR.setNegativeInt(result | 0);
-    this.CPSR.setZeroInt(result | 0);
+    this.CPSR.setNZInt(result | 0);
     //Update destination register and guard CPSR for PC:
     this.multiplyGuard16OffsetRegisterWrite(result | 0);
 }
@@ -2299,7 +2281,7 @@ ARMInstructionSet.prototype.llis = function () {
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
     if ((shifter | 0) > 0) {
-        this.CPSR.setCarry((register << ((shifter | 0) - 1)) < 0);
+        this.CPSR.setCarryInt(register << ((shifter | 0) - 1));
     }
     //Shift the register data left:
     return register << (shifter | 0);
@@ -2332,13 +2314,13 @@ ARMInstructionSet.prototype.llrs = function () {
     if ((shifter | 0) > 0) {
         if ((shifter | 0) < 0x20) {
             //Shift the register data left:
-            this.CPSR.setCarry((register << (((shifter | 0) - 1) | 0)) < 0);
+            this.CPSR.setCarryInt(register << ((shifter | 0) - 1));
             register = register << (shifter | 0);
         }
         else {
             if ((shifter | 0) == 0x20) {
                 //Shift bit 0 into carry:
-                this.CPSR.setCarry((register & 0x1) == 0x1);
+                this.CPSR.setCarryInt(register << 31);
             }
             else {
                 //Everything Zero'd:
@@ -2375,12 +2357,12 @@ ARMInstructionSet.prototype.lris = function () {
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
     if ((shifter | 0) > 0) {
-        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+        this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
         //Shift the register data right logically:
         register = (register >>> (shifter | 0)) | 0;
     }
     else {
-        this.CPSR.setCarry((register | 0) < 0);
+        this.CPSR.setCarryInt(register | 0);
         //Return 0:
         register = 0;
     }
@@ -2413,13 +2395,13 @@ ARMInstructionSet.prototype.lrrs = function () {
     if ((shifter | 0) > 0) {
         if ((shifter | 0) < 0x20) {
             //Shift the register data right logically:
-            this.CPSR.setCarry(((register >> (((shifter | 0) - 1) | 0)) & 0x1) == 0x1);
+            this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
             register = (register >>> (shifter | 0)) | 0;
         }
         else {
             if ((shifter | 0) == 0x20) {
                 //Shift bit 31 into carry:
-                this.CPSR.setCarry((register | 0) < 0);
+                this.CPSR.setCarryInt(register | 0);
             }
             else {
                 //Everything Zero'd:
@@ -2454,12 +2436,12 @@ ARMInstructionSet.prototype.aris = function () {
     var shifter = (this.execute >> 7) & 0x1F;
     //Check to see if we need to update CPSR:
     if ((shifter | 0) > 0) {
-        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+        this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
     }
     else {
         //Shift full length if shifter is zero:
         shifter = 0x1F;
-        this.CPSR.setCarry((register | 0) < 0);
+        this.CPSR.setCarryInt(register | 0);
     }
     //Shift the register data right:
     return register >> (shifter | 0);
@@ -2485,12 +2467,12 @@ ARMInstructionSet.prototype.arrs = function () {
     if ((shifter | 0) > 0) {
         if ((shifter | 0) < 0x20) {
             //Shift the register data right arithmetically:
-            this.CPSR.setCarry(((register >> (((shifter | 0) - 1) | 0)) & 0x1) == 0x1);
+            this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
             register = register >> (shifter | 0);
         }
         else {
             //Set all bits with bit 31:
-            this.CPSR.setCarry((register | 0) < 0);
+            this.CPSR.setCarryInt(register | 0);
             register = register >> 0x1F;
         }
     }
@@ -2525,13 +2507,13 @@ ARMInstructionSet.prototype.rris = function () {
     var shifter = (this.execute >> 7) & 0x1F;
     if ((shifter | 0) > 0) {
         //ROR
-        this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+        this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
         register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
     }
     else {
         //RRX
         var rrxValue = ((this.CPSR.getCarry()) ? 0x80000000 : 0) | (register >>> 0x1);
-        this.CPSR.setCarry((register & 0x1) != 0);
+        this.CPSR.setCarryInt(register << 31);
         register = rrxValue | 0;
     }
     return register | 0;
@@ -2563,12 +2545,12 @@ ARMInstructionSet.prototype.rrrs = function () {
         shifter = shifter & 0x1F;
         if ((shifter | 0) > 0) {
             //ROR
-            this.CPSR.setCarry(((register >>> ((shifter | 0) - 1)) & 0x1) == 0x1);
+            this.CPSR.setCarryInt((register >> ((shifter | 0) - 1)) << 31);
             register = (register << (0x20 - (shifter | 0))) | (register >>> (shifter | 0));
         }
         else {
             //No shift, but make carry set to bit 31:
-            this.CPSR.setCarry((register | 0) < 0);
+            this.CPSR.setCarryInt(register | 0);
         }
     }
     //If shift is 0, just return the register without mod:
@@ -2591,7 +2573,7 @@ ARMInstructionSet.prototype.imms = function () {
     var shifter = (this.execute >> 7) & 0x1E;
     if ((shifter | 0) > 0) {
         immediate = (immediate << (0x20 - (shifter | 0))) | (immediate >>> (shifter | 0));
-        this.CPSR.setCarry(immediate < 0);
+        this.CPSR.setCarryInt(immediate | 0);
     }
     return immediate | 0;
 }
