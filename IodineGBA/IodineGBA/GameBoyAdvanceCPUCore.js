@@ -74,8 +74,8 @@ GameBoyAdvanceCPU.prototype.initializeRegisters = function () {
     if (!this.IOCore.BIOSFound || this.IOCore.settings.SKIPBoot) {
         this.HLEReset();
     }
-    //No pending IRQs to check for yet:
-    this.executeIteration = this.executeBubble;
+    //Start in fully bubbled pipeline mode:
+    this.IOCore.flagStepper(1);
 }
 GameBoyAdvanceCPU.prototype.HLEReset = function () {
     this.registersSVC[0] = 0x3007FE0;
@@ -87,8 +87,7 @@ GameBoyAdvanceCPU.prototype.HLEReset = function () {
 GameBoyAdvanceCPU.prototype.executeIRQ = function () {
     //Handle an IRQ:
     this.IRQ();
-    //Continue to bubble the pipeline:
-    this.executeBubble();
+    this.IOCore.deflagStepper(2);
 }
 GameBoyAdvanceCPU.prototype.executeBubble = function () {
     //Tick the pipeline and bubble out invalidity:
@@ -100,10 +99,7 @@ GameBoyAdvanceCPU.prototype.executeBubble = function () {
         if ((this.pipelineInvalid | 0) == 1) {
             //Change state to normal execution:
             this.pipelineInvalid = 0;
-            //Make sure we don't cancel any IRQ scheduled:
-            if (!this.processIRQ) {
-                this.executeIteration = this.executeIterationRegular;
-            }
+            this.IOCore.deflagStepper(1);
         }
         this.instructionHandle.incrementProgramCounter();
     }
@@ -119,10 +115,7 @@ GameBoyAdvanceCPU.prototype.branch = function (branchTo) {
         this.registers[15] = branchTo | 0;
         //Mark pipeline as invalid:
         this.pipelineInvalid = 0x4;
-        //Check what executor to use:
-        if (!this.processIRQ) {
-            this.executeIteration = this.executeBubble;
-        }
+        this.IOCore.flagStepper(1);
         //Next PC fetch has to update the address bus:
         this.wait.NonSequentialBroadcast();
     }
@@ -146,7 +139,7 @@ GameBoyAdvanceCPU.prototype.triggerIRQ = function (didFire) {
 GameBoyAdvanceCPU.prototype.assertIRQ = function () {
     this.processIRQ = this.triggeredIRQ && !this.IRQDisabled;
     if (this.processIRQ) {
-        this.executeIteration = this.executeIRQ;
+        this.IOCore.flagStepper(2);
     }
 }
 GameBoyAdvanceCPU.prototype.getCurrentFetchValue = function () {

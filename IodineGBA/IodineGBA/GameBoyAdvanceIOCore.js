@@ -45,8 +45,6 @@ function GameBoyAdvanceIO(settings, coreExposed, BIOS, ROM) {
     this.wait = new GameBoyAdvanceWait(this);
     this.cpu = new GameBoyAdvanceCPU(this);
     this.memory.loadReferences();
-    //Start in CPU interpreter mode:
-    this.stepHandle = this.handleCPUInterpreter;
 }
 GameBoyAdvanceIO.prototype.iterate = function (CPUCyclesTotal) {
     //Find out how many clocks to iterate through this run:
@@ -67,9 +65,44 @@ GameBoyAdvanceIO.prototype.iterate = function (CPUCyclesTotal) {
 }
 GameBoyAdvanceIO.prototype.runIterator = function () {
     //Clock through the state machine:
-    while ((this.cyclesToIterate | 0) > 0) {
+    while (true) {
         //Handle the current system state selected:
-        this.stepHandle();
+        switch (this.systemStatus | 0) {
+            case 0: //CPU Handle State (Normal)
+                this.cpu.executeIterationRegular();
+                break;
+            case 1: //CPU Handle State (Bubble)
+                this.cpu.executeBubble();
+                break;
+            case 2: //CPU Handle State (IRQ)
+            case 3:
+                this.cpu.executeIRQ();
+                break;
+            case 4: //DMA Handle State
+            case 5:
+            case 6:
+            case 7:
+            case 12: //DMA Inside Halt State
+            case 13:
+            case 14:
+            case 15:
+                this.dma.perform();
+                break;
+            case 8: //Handle Halt State
+            case 9:
+            case 10:
+            case 11:
+                this.handleHalt();
+                break;
+            default: //Handle Stop State / End of stepping
+                if ((this.systemStatus | 0) >= 0x20) {
+                    //End of Stepping:
+                    this.deflagStepper(0x20);
+                    return;
+                }
+                //Stop Mode:
+                this.handleStop();
+        }
     }
 }
 GameBoyAdvanceIO.prototype.updateCore = function (clocks) {
@@ -137,33 +170,12 @@ GameBoyAdvanceIO.prototype.updateCoreEventTime = function () {
 }
 GameBoyAdvanceIO.prototype.getRemainingCycles = function () {
     //Return the number of cycles left until iteration end:
-    return Math.max(this.cyclesToIterate | 0, 0) | 0;
-}
-GameBoyAdvanceIO.prototype.preprocessSystemStepper = function () {
-    switch (this.systemStatus | 0) {
-        case 0: //CPU Handle State
-            this.stepHandle = this.handleCPUInterpreter;
-            break;
-        case 1:    //DMA Handle State
-            this.stepHandle = this.handleDMA;
-            break;
-        case 2: //Handle Halt State
-            this.stepHandle = this.handleHalt;
-            break;
-        case 3: //DMA Inside Halt State
-            this.stepHandle = this.handleDMA;
-            break;
-        default: //Handle Stop State
-            this.stepHandle = this.handleStop;
+    if ((this.cyclesToIterate | 0) <= 0) {
+        //Change our stepper to our end sequence:
+        this.flagStepper(0x20);
+        return 0;
     }
-}
-GameBoyAdvanceIO.prototype.handleCPUInterpreter = function () {
-    //Execute next instruction:
-    //Interpreter:
-    this.cpu.executeIteration();
-}
-GameBoyAdvanceIO.prototype.handleDMA = function () {
-    this.dma.perform();
+    return this.cyclesToIterate | 0;
 }
 GameBoyAdvanceIO.prototype.handleHalt = function () {
     if (!this.irq.IRQMatch()) {
@@ -172,7 +184,7 @@ GameBoyAdvanceIO.prototype.handleHalt = function () {
     }
     else {
         //Exit HALT promptly:
-        this.deflagStepper(0x2);
+        this.deflagStepper(0x8);
     }
 }
 GameBoyAdvanceIO.prototype.handleStop = function () {
@@ -185,29 +197,29 @@ GameBoyAdvanceIO.prototype.cyclesUntilNextHALTEvent = function () {
     //Find the clocks to the next HALT leave or DMA event:
     var haltClocks = this.irq.nextEventTime() | 0;
     var dmaClocks = this.dma.nextEventTime() | 0;
-    return this.solveClosestTime(haltClocks, dmaClocks) | 0;
+    return this.solveClosestTime(haltClocks | 0, dmaClocks | 0) | 0;
 }
 GameBoyAdvanceIO.prototype.cyclesUntilNextEvent = function () {
     //Find the clocks to the next IRQ or DMA event:
     var irqClocks = this.irq.nextIRQEventTime() | 0;
     var dmaClocks = this.dma.nextEventTime() | 0;
-    return this.solveClosestTime(irqClocks, dmaClocks) | 0;
+    return this.solveClosestTime(irqClocks | 0, dmaClocks | 0) | 0;
 }
 GameBoyAdvanceIO.prototype.solveClosestTime = function (clocks1, clocks2) {
     clocks1 = clocks1 | 0;
     clocks2 = clocks2 | 0;
     //Find the clocks closest to the next event:
     var clocks = this.getRemainingCycles() | 0;
-    if (clocks1 >= 0) {
-        if (clocks2 >= 0) {
-            clocks = Math.min(clocks, clocks1, clocks2) | 0;
+    if ((clocks1 | 0) >= 0) {
+        if ((clocks2 | 0) >= 0) {
+            clocks = Math.min(clocks | 0, clocks1 | 0, clocks2 | 0) | 0;
         }
         else {
-            clocks = Math.min(clocks, clocks1) | 0;
+            clocks = Math.min(clocks | 0, clocks1 | 0) | 0;
         }
     }
     else if (clocks2 >= 0) {
-        clocks = Math.min(clocks, clocks2) | 0;
+        clocks = Math.min(clocks | 0, clocks2 | 0) | 0;
     }
     return clocks | 0;
 }
@@ -215,11 +227,9 @@ GameBoyAdvanceIO.prototype.deflagStepper = function (statusFlag) {
     statusFlag = statusFlag | 0;
     //Deflag a system event to step through:
     this.systemStatus = this.systemStatus & (~statusFlag);
-    this.preprocessSystemStepper();
 }
 GameBoyAdvanceIO.prototype.flagStepper = function (statusFlag) {
     statusFlag = statusFlag | 0;
     //Flag a system event to step through:
     this.systemStatus = this.systemStatus | statusFlag;
-    this.preprocessSystemStepper();
 }

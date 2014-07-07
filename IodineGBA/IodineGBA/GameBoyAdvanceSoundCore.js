@@ -123,7 +123,7 @@ if (!!Math.imul) {
     GameBoyAdvanceSound.prototype.generateAudioReal = function (numSamples) {
         numSamples = numSamples | 0;
         var multiplier = 0;
-        if (this.soundMasterEnabled && (this.IOCore.systemStatus | 0) < 4) {
+        if (this.soundMasterEnabled && (this.IOCore.systemStatus | 0) < 0x10) {
             for (var clockUpTo = 0; (numSamples | 0) > 0;) {
                 clockUpTo = Math.min(this.PWMWidth | 0, numSamples | 0) | 0;
                 this.PWMWidth = ((this.PWMWidth | 0) - (clockUpTo | 0)) | 0;
@@ -168,7 +168,7 @@ else {
     //Math.imul not found, use the compatibility method:
     GameBoyAdvanceSound.prototype.generateAudioReal = function (numSamples) {
         var multiplier = 0;
-        if (this.soundMasterEnabled && this.IOCore.systemStatus < 4) {
+        if (this.soundMasterEnabled && this.IOCore.systemStatus < 0x10) {
             for (var clockUpTo = 0; numSamples > 0;) {
                 clockUpTo = Math.min(this.PWMWidth, numSamples);
                 this.PWMWidth = this.PWMWidth - clockUpTo;
@@ -212,7 +212,7 @@ else {
 //Generate audio, but don't actually output it (Used for when sound is disabled by user/browser):
 GameBoyAdvanceSound.prototype.generateAudioFake = function (numSamples) {
     numSamples = numSamples | 0;
-    if (this.soundMasterEnabled && this.IOCore.systemStatus < 4) {
+    if (this.soundMasterEnabled && this.IOCore.systemStatus < 0x10) {
         for (var clockUpTo = 0; (numSamples | 0) > 0;) {
             clockUpTo = Math.min(this.PWMWidth | 0, numSamples | 0) | 0;
             this.PWMWidth = ((this.PWMWidth | 0) - (clockUpTo | 0)) | 0;

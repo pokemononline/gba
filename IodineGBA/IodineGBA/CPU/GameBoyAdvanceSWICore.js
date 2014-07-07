@@ -247,10 +247,10 @@ GameBoyAdvanceSWI.prototype.RegisterRAMReset = function () {
     }
 }
 GameBoyAdvanceSWI.prototype.Halt = function () {
-    this.IOCore.flagStepper(2);
+    this.IOCore.flagStepper(0x8);
 }
 GameBoyAdvanceSWI.prototype.Stop = function () {
-    this.IOCore.flagStepper(4);
+    this.IOCore.flagStepper(0x10);
 }
 GameBoyAdvanceSWI.prototype.IntrWait = function () {
     this.IOCore.irq.IME = true;
