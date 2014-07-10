@@ -95,7 +95,7 @@ GameBoyAdvanceIO.prototype.runIterator = function () {
                 this.handleHalt();
                 break;
             default: //Handle Stop State / End of stepping
-                if ((this.systemStatus | 0) >= 0x20) {
+                if ((this.systemStatus & 0x20) == 0x20) {
                     //End of Stepping:
                     this.deflagStepper(0x20);
                     return;

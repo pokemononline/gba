@@ -123,7 +123,7 @@ if (!!Math.imul) {
     GameBoyAdvanceSound.prototype.generateAudioReal = function (numSamples) {
         numSamples = numSamples | 0;
         var multiplier = 0;
-        if (this.soundMasterEnabled && (this.IOCore.systemStatus | 0) < 0x10) {
+        if (this.soundMasterEnabled && (this.IOCore.systemStatus & 0x10) == 0) {
             for (var clockUpTo = 0; (numSamples | 0) > 0;) {
                 clockUpTo = Math.min(this.PWMWidth | 0, numSamples | 0) | 0;
                 this.PWMWidth = ((this.PWMWidth | 0) - (clockUpTo | 0)) | 0;
