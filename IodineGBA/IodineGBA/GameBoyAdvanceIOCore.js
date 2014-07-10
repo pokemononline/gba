@@ -72,10 +72,10 @@ GameBoyAdvanceIO.prototype.runIterator = function () {
                 this.cpu.executeIterationRegular();
                 break;
             case 1: //CPU Handle State (Bubble)
+            case 3:
                 this.cpu.executeBubble();
                 break;
             case 2: //CPU Handle State (IRQ)
-            case 3:
                 this.cpu.executeIRQ();
                 break;
             case 4: //DMA Handle State

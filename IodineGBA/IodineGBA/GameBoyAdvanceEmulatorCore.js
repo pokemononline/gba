@@ -193,7 +193,7 @@ GameBoyAdvanceEmulator.prototype.setSpeed = function (speed) {
     var speed = Math.min(Math.max(parseFloat(speed), 0.01), 10);
     this.resetMetrics();
     if (speed != this.settings.emulatorSpeed) {
-        this.settings.emulatorSpeed = speed | 0;
+        this.settings.emulatorSpeed = speed;
         this.calculateTimings();
         this.reinitializeAudio();
     }

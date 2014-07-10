@@ -68,8 +68,7 @@ GameBoyAdvanceCPU.prototype.initializeRegisters = function () {
     this.SPSRABT = [false, false, false, false, true, true, false, 0x13];    //Abort
     this.SPSRUND = [false, false, false, false, true, true, false, 0x13];    //Undefined
     this.triggeredIRQ = false;        //Pending IRQ found.
-    this.processIRQ = false;        //Interrupt program flow for IRQ.
-    this.pipelineInvalid = 0x4;        //Mark pipeline as invalid.
+    this.pipelineInvalid = 0x2;        //Mark pipeline as invalid.
     //Pre-initialize stack pointers if no BIOS loaded:
     if (!this.IOCore.BIOSFound || this.IOCore.settings.SKIPBoot) {
         this.HLEReset();
@@ -92,17 +91,13 @@ GameBoyAdvanceCPU.prototype.executeIRQ = function () {
 GameBoyAdvanceCPU.prototype.executeBubble = function () {
     //Tick the pipeline and bubble out invalidity:
     this.pipelineInvalid >>= 1;
+    //If on the second bubble, kick ourselves out of the bubble mode:
+    if ((this.pipelineInvalid | 0) == 0) {
+        //Change state to normal execution:
+        this.IOCore.deflagStepper(1);
+    }
     //Tick the pipeline of the selected instruction set:
     this.instructionHandle.executeBubble();
-    //Increment the program counter if we didn't just branch:
-    if ((this.pipelineInvalid | 0) < 0x4) {
-        if ((this.pipelineInvalid | 0) == 1) {
-            //Change state to normal execution:
-            this.pipelineInvalid = 0;
-            this.IOCore.deflagStepper(1);
-        }
-        this.instructionHandle.incrementProgramCounter();
-    }
 }
 GameBoyAdvanceCPU.prototype.executeIterationRegular = function () {
     //Tick the pipeline of the selected instruction set:
@@ -114,7 +109,7 @@ GameBoyAdvanceCPU.prototype.branch = function (branchTo) {
         //Branch to new address:
         this.registers[15] = branchTo | 0;
         //Mark pipeline as invalid:
-        this.pipelineInvalid = 0x4;
+        this.pipelineInvalid = 0x2;
         this.IOCore.flagStepper(1);
         //Next PC fetch has to update the address bus:
         this.wait.NonSequentialBroadcast();
@@ -137,8 +132,7 @@ GameBoyAdvanceCPU.prototype.triggerIRQ = function (didFire) {
     this.assertIRQ();
 }
 GameBoyAdvanceCPU.prototype.assertIRQ = function () {
-    this.processIRQ = this.triggeredIRQ && !this.IRQDisabled;
-    if (this.processIRQ) {
+    if (this.triggeredIRQ && !this.IRQDisabled) {
         this.IOCore.flagStepper(2);
     }
 }
@@ -155,18 +149,6 @@ GameBoyAdvanceCPU.prototype.getLR = function () {
     //Get the previous instruction address:
     return this.instructionHandle.getLR() | 0;
 }
-GameBoyAdvanceCPU.prototype.getIRQLR = function () {
-    //Get the previous instruction address:
-    var lr = this.instructionHandle.getIRQLR() | 0;
-    var modeOffset = (this.InTHUMB) ? 2 : 4;
-    if ((this.pipelineInvalid | 0) > 1) {
-        while ((this.pipelineInvalid | 0) > 1) {
-            lr = ((lr | 0) + (modeOffset | 0)) | 0;
-            this.pipelineInvalid >>= 1;
-        }
-    }
-    return lr | 0;
-}
 GameBoyAdvanceCPU.prototype.THUMBBitModify = function (isThumb) {
     this.InTHUMB = isThumb;
     if (isThumb) {
@@ -180,10 +162,9 @@ GameBoyAdvanceCPU.prototype.IRQ = function () {
     //Mode bits are set to IRQ:
     this.switchMode(0x12);
     //Save link register:
-    this.registers[14] = this.getIRQLR() | 0;
+    this.registers[14] = this.instructionHandle.getIRQLR() | 0;
     //Disable IRQ:
     this.IRQDisabled = true;
-    this.processIRQ = false;
     if (this.IOCore.BIOSFound) {
         //Exception always enter ARM mode:
         this.enterARM();
@@ -253,7 +234,6 @@ GameBoyAdvanceCPU.prototype.SWI = function () {
         this.registers[14] = this.getLR() | 0;
         //Disable IRQ:
         this.IRQDisabled = true;
-        this.processIRQ = false;
         //Exception always enter ARM mode:
         this.enterARM();
         //SWI exception vector:
@@ -274,7 +254,6 @@ GameBoyAdvanceCPU.prototype.UNDEFINED = function () {
         this.registers[14] = this.getLR() | 0;
         //Disable IRQ:
         this.IRQDisabled = true;
-        this.processIRQ = false;
         //Exception always enter ARM mode:
         this.enterARM();
         //Undefined exception vector:

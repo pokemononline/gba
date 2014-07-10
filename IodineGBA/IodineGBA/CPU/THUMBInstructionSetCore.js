@@ -303,6 +303,8 @@ THUMBInstructionSet.prototype.executeDecoded = function () {
 THUMBInstructionSet.prototype.executeBubble = function () {
     //Push the new fetch access:
     this.fetch = this.memory.memoryReadFast16(this.readPC() | 0) | 0;
+    //Update the Program Counter:
+    this.incrementProgramCounter();
     //Update the pipelining state:
     this.execute = this.decode | 0;
     this.decode = this.fetch | 0;
