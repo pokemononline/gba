@@ -29,7 +29,6 @@ GameBoyAdvanceCPU.prototype.initialize = function () {
     this.ARM = new ARMInstructionSet(this);
     this.THUMB = new THUMBInstructionSet(this);
     this.swi = new GameBoyAdvanceSWI(this);
-    this.instructionHandle = this.ARM;
 }
 GameBoyAdvanceCPU.prototype.initializeRegisters = function () {
     /*
@@ -88,7 +87,7 @@ GameBoyAdvanceCPU.prototype.executeIRQ = function () {
     this.IRQ();
     this.IOCore.deflagStepper(2);
 }
-GameBoyAdvanceCPU.prototype.executeBubble = function () {
+GameBoyAdvanceCPU.prototype.executeBubbleARM = function () {
     //Tick the pipeline and bubble out invalidity:
     this.pipelineInvalid >>= 1;
     //If on the second bubble, kick ourselves out of the bubble mode:
@@ -97,11 +96,26 @@ GameBoyAdvanceCPU.prototype.executeBubble = function () {
         this.IOCore.deflagStepper(1);
     }
     //Tick the pipeline of the selected instruction set:
-    this.instructionHandle.executeBubble();
+    this.ARM.executeBubble();
 }
-GameBoyAdvanceCPU.prototype.executeIterationRegular = function () {
+GameBoyAdvanceCPU.prototype.executeIterationRegularARM = function () {
     //Tick the pipeline of the selected instruction set:
-    this.instructionHandle.executeIteration();
+    this.ARM.executeIteration();
+}
+GameBoyAdvanceCPU.prototype.executeBubbleTHUMB = function () {
+    //Tick the pipeline and bubble out invalidity:
+    this.pipelineInvalid >>= 1;
+    //If on the second bubble, kick ourselves out of the bubble mode:
+    if ((this.pipelineInvalid | 0) == 0) {
+        //Change state to normal execution:
+        this.IOCore.deflagStepper(1);
+    }
+    //Tick the pipeline of the selected instruction set:
+    this.THUMB.executeBubble();
+}
+GameBoyAdvanceCPU.prototype.executeIterationRegularTHUMB = function () {
+    //Tick the pipeline of the selected instruction set:
+    this.THUMB.executeIteration();
 }
 GameBoyAdvanceCPU.prototype.branch = function (branchTo) {
     branchTo = branchTo | 0;
@@ -137,7 +151,12 @@ GameBoyAdvanceCPU.prototype.assertIRQ = function () {
     }
 }
 GameBoyAdvanceCPU.prototype.getCurrentFetchValue = function () {
-    return this.instructionHandle.getCurrentFetchValue() | 0;
+    if (this.InTHUMB) {
+        return this.THUMB.getCurrentFetchValue() | 0;
+    }
+    else {
+        return this.ARM.getCurrentFetchValue() | 0;
+    }
 }
 GameBoyAdvanceCPU.prototype.enterARM = function () {
     this.THUMBBitModify(false);
@@ -147,22 +166,32 @@ GameBoyAdvanceCPU.prototype.enterTHUMB = function () {
 }
 GameBoyAdvanceCPU.prototype.getLR = function () {
     //Get the previous instruction address:
-    return this.instructionHandle.getLR() | 0;
+    if (this.InTHUMB) {
+        return this.THUMB.getLR() | 0;
+    }
+    else {
+        return this.ARM.getLR() | 0;
+    }
 }
 GameBoyAdvanceCPU.prototype.THUMBBitModify = function (isThumb) {
     this.InTHUMB = isThumb;
     if (isThumb) {
-        this.instructionHandle = this.THUMB;
+        this.IOCore.flagStepper(4);
     }
     else {
-        this.instructionHandle = this.ARM;
+        this.IOCore.deflagStepper(4);
     }
 }
 GameBoyAdvanceCPU.prototype.IRQ = function () {
     //Mode bits are set to IRQ:
     this.switchMode(0x12);
     //Save link register:
-    this.registers[14] = this.instructionHandle.getIRQLR() | 0;
+    if (this.InTHUMB) {
+        this.registers[14] = this.THUMB.getIRQLR() | 0;
+    }
+    else {
+        this.registers[14] = this.ARM.getIRQLR() | 0;
+    }
     //Disable IRQ:
     this.IRQDisabled = true;
     if (this.IOCore.BIOSFound) {
@@ -240,9 +269,16 @@ GameBoyAdvanceCPU.prototype.SWI = function () {
         this.branch(0x8);
     }
     else {
-        this.instructionHandle.incrementProgramCounter();
-        //HLE the SWI command:
-        this.swi.execute(this.instructionHandle.getSWICode() | 0);
+        if (this.InTHUMB) {
+            this.THUMB.incrementProgramCounter();
+            //HLE the SWI command:
+            this.swi.execute(this.THUMB.getSWICode() | 0);
+        }
+        else {
+            this.ARM.incrementProgramCounter();
+            //HLE the SWI command:
+            this.swi.execute(this.ARM.getSWICode() | 0);
+        }
     }
 }
 GameBoyAdvanceCPU.prototype.UNDEFINED = function () {
@@ -261,7 +297,12 @@ GameBoyAdvanceCPU.prototype.UNDEFINED = function () {
     }
     else {
         //Pretend we didn't execute the bad instruction then:
-        this.instructionHandle.incrementProgramCounter();
+        if (this.InTHUMB) {
+            this.THUMB.incrementProgramCounter();
+        }
+        else {
+            this.ARM.incrementProgramCounter();
+        }
     }
 }
 GameBoyAdvanceCPU.prototype.SPSRtoCPSR = function () {

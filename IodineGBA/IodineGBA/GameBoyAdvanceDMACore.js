@@ -147,7 +147,7 @@ GameBoyAdvanceDMA.prototype.update = function () {
     if ((lowestDMAFound | 0) < 4) {
         //Found an active DMA:
         if ((this.currentMatch | 0) == -1) {
-            this.IOCore.flagStepper(0x4);
+            this.IOCore.flagStepper(0x8);
         }
         if ((this.currentMatch | 0) != (lowestDMAFound | 0)) {
             //Re-broadcasting on address bus, so non-seq:
@@ -160,7 +160,7 @@ GameBoyAdvanceDMA.prototype.update = function () {
     else if ((this.currentMatch | 0) != -1) {
         //No active DMA found:
         this.currentMatch = -1;
-        this.IOCore.deflagStepper(0x4);
+        this.IOCore.deflagStepper(0x8);
         this.IOCore.updateCoreSpill();
     }
 }

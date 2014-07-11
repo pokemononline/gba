@@ -97,7 +97,7 @@ GameBoyAdvanceEEPROMChip.prototype.write8 = function (data) {
 }
 GameBoyAdvanceEEPROMChip.prototype.write16 = function (data) {
     data = data & 0x1;
-    if ((this.IOCore.systemStatus & 0x4) == 0x4) {
+    if ((this.IOCore.systemStatus & 0x8) == 0x8) {
         //Writes only work in DMA:
         switch (this.mode | 0) {
                 //Idle Mode:

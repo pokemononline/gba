@@ -68,36 +68,56 @@ GameBoyAdvanceIO.prototype.runIterator = function () {
     while (true) {
         //Handle the current system state selected:
         switch (this.systemStatus | 0) {
-            case 0: //CPU Handle State (Normal)
-                this.cpu.executeIterationRegular();
+            case 0: //CPU Handle State (Normal ARM)
+                this.cpu.executeIterationRegularARM();
                 break;
-            case 1: //CPU Handle State (Bubble)
+            case 1: //CPU Handle State (Bubble ARM)
             case 3:
-                this.cpu.executeBubble();
+                this.cpu.executeBubbleARM();
+                break;
+            case 4: //CPU Handle State (Normal THUMB)
+                this.cpu.executeIterationRegularTHUMB();
+                break;
+            case 5: //CPU Handle State (Bubble THUMB)
+            case 7:
+                this.cpu.executeBubbleTHUMB();
                 break;
             case 2: //CPU Handle State (IRQ)
+            case 6:
                 this.cpu.executeIRQ();
                 break;
-            case 4: //DMA Handle State
-            case 5:
-            case 6:
-            case 7:
-            case 12: //DMA Inside Halt State
-            case 13:
-            case 14:
-            case 15:
+            case 0x8: //DMA Handle State
+            case 0x9:
+            case 0xA:
+            case 0xB:
+            case 0xC:
+            case 0xD:
+            case 0xE:
+            case 0xF:
+            case 0x18: //DMA Inside Halt State
+            case 0x19:
+            case 0x1A:
+            case 0x1B:
+            case 0x1C:
+            case 0x1D:
+            case 0x1E:
+            case 0x1F:
                 this.dma.perform();
                 break;
-            case 8: //Handle Halt State
-            case 9:
-            case 10:
-            case 11:
+            case 0x10: //Handle Halt State
+            case 0x11:
+            case 0x12:
+            case 0x13:
+            case 0x14:
+            case 0x15:
+            case 0x16:
+            case 0x17:
                 this.handleHalt();
                 break;
             default: //Handle Stop State / End of stepping
-                if ((this.systemStatus & 0x20) == 0x20) {
+                if ((this.systemStatus & 0x40) == 0x40) {
                     //End of Stepping:
-                    this.deflagStepper(0x20);
+                    this.deflagStepper(0x40);
                     return;
                 }
                 //Stop Mode:
@@ -172,7 +192,7 @@ GameBoyAdvanceIO.prototype.getRemainingCycles = function () {
     //Return the number of cycles left until iteration end:
     if ((this.cyclesToIterate | 0) <= 0) {
         //Change our stepper to our end sequence:
-        this.flagStepper(0x20);
+        this.flagStepper(0x40);
         return 0;
     }
     return this.cyclesToIterate | 0;
@@ -184,7 +204,7 @@ GameBoyAdvanceIO.prototype.handleHalt = function () {
     }
     else {
         //Exit HALT promptly:
-        this.deflagStepper(0x8);
+        this.deflagStepper(0x10);
     }
 }
 GameBoyAdvanceIO.prototype.handleStop = function () {
