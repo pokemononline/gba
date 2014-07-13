@@ -311,12 +311,12 @@ GameBoyAdvanceWait.prototype.getROMRead32Prefetch = function (address) {
             break;
         case 1:
             //Partial miss if only 16 bits out of 32 bits stored:
-            this.IOCore.updateCore(((this.waitStateClocks[address & 0xFF] | 0) - (this.prebufferClocks | 0) + 1) | 0);
+            this.IOCore.updateCore(((this.waitStateClocks[address & 0xFF] | 0) - (this.prebufferClocks | 0)) | 0);
             this.prebufferClocks = this.ROMPrebuffer = 0;
             break;
         default:
             //Cache hit:
-            this.doZeroWait16();
+            this.doZeroWait32();
     }
 }
 GameBoyAdvanceWait.prototype.getROMRead32NoPrefetch = function (address) {
@@ -332,6 +332,8 @@ GameBoyAdvanceWait.prototype.NonSequentialBroadcast = function () {
 GameBoyAdvanceWait.prototype.NonSequentialBroadcastClear = function () {
     this.ROMPrebuffer = 0;
     this.prebufferClocks = 0;
+    this.nonSequential = 0x100;
+    this.nonSequentialPrebuffer = 0x100;
     this.romPrebufferContinued = 0x100;
 }
 GameBoyAdvanceWait.prototype.WRAMAccess8 = GameBoyAdvanceWait.prototype.WRAMAccess16 = function () {
@@ -353,6 +355,8 @@ GameBoyAdvanceWait.prototype.ROMAccess16 = GameBoyAdvanceWait.prototype.ROMAcces
     this.check128kAlignmentBug(address | 0);
     this.IOCore.updateCore(this.waitStateClocks[(address >> 24) | this.nonSequential] | 0);
     this.nonSequential = 0;
+    this.romPrebufferContinued = 0;
+    this.nonSequentialPrebuffer = 0;
 }
 GameBoyAdvanceWait.prototype.ROMAccess16CPU = function (address) {
     address = address | 0;
@@ -364,6 +368,8 @@ GameBoyAdvanceWait.prototype.ROMAccess32 = function (address) {
     this.check128kAlignmentBug(address | 0);
     this.IOCore.updateCore(this.waitStateClocksFull[(address >> 24) | this.nonSequential] | 0);
     this.nonSequential = 0;
+    this.romPrebufferContinued = 0;
+    this.nonSequentialPrebuffer = 0;
 }
 GameBoyAdvanceWait.prototype.ROMAccess32CPU = function (address) {
     address = address | 0;
