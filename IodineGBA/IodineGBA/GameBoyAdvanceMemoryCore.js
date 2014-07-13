@@ -121,7 +121,7 @@ GameBoyAdvanceMemory.prototype.writeExternalWRAM8 = function (address, data) {
     address = address | 0;
     data = data | 0;
     //External WRAM:
-    this.wait.WRAMAccess8();
+    this.wait.WRAMAccess();
     this.externalRAM[address & 0x3FFFF] = data | 0;
 }
 if (__LITTLE_ENDIAN__) {
@@ -129,7 +129,7 @@ if (__LITTLE_ENDIAN__) {
         address = address | 0;
         data = data | 0;
         //External WRAM:
-        this.wait.WRAMAccess16();
+        this.wait.WRAMAccess();
         this.externalRAM16[(address >> 1) & 0x1FFFF] = data | 0;
     }
     GameBoyAdvanceMemory.prototype.writeExternalWRAM32 = function (address, data) {
@@ -143,7 +143,7 @@ if (__LITTLE_ENDIAN__) {
 else {
     GameBoyAdvanceMemory.prototype.writeExternalWRAM16 = function (address, data) {
         //External WRAM:
-        this.wait.WRAMAccess16();
+        this.wait.WRAMAccess();
         this.externalRAM[address & 0x3FFFF] = data & 0xFF;
         this.externalRAM[(address + 1) & 0x3FFFF] = data >> 8;
     }
@@ -242,7 +242,7 @@ if (!!Math.imul) {
         address = address | 0;
         data = data | 0;
         this.IOCore.updateGraphicsClocking();
-        this.wait.VRAMAccess8();
+        this.wait.VRAMAccess();
         if ((address & 0x10000) != 0) {
             if ((address & 0x17FFF) < 0x14000 && (this.gfx.BGMode | 0) >= 3) {
                 this.gfx.writeVRAM16(address & 0x17FFE, Math.imul(data | 0, 0x101) | 0);
@@ -259,7 +259,7 @@ else {
         address = address | 0;
         data = data | 0;
         this.IOCore.updateGraphicsClocking();
-        this.wait.VRAMAccess8();
+        this.wait.VRAMAccess();
         if ((address & 0x10000) != 0) {
             if ((address & 0x17FFF) < 0x14000 && (this.gfx.BGMode | 0) >= 3) {
                 this.gfx.writeVRAM16(address & 0x17FFE, (data * 0x101) | 0);
@@ -274,7 +274,7 @@ GameBoyAdvanceMemory.prototype.writeVRAM16 = function (address, data) {
     address = address | 0;
     data = data | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess16();
+    this.wait.VRAMAccess();
     address = address & (((address & 0x10000) >> 1) ^ address);
     this.gfx.writeVRAM16(address & 0x1FFFE, data | 0);
 }
@@ -288,20 +288,20 @@ GameBoyAdvanceMemory.prototype.writeVRAM32 = function (address, data) {
 }
 GameBoyAdvanceMemory.prototype.writeOAM8 = function (address, data) {
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess8();
+    this.wait.OAMAccess();
 }
 GameBoyAdvanceMemory.prototype.writeOAM16 = function (address, data) {
     address = address | 0;
     data = data | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess16();
+    this.wait.OAMAccess();
     this.gfx.writeOAM16(address & 0x3FE, data | 0);
 }
 GameBoyAdvanceMemory.prototype.writeOAM32 = function (address, data) {
     address = address | 0;
     data = data | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess32();
+    this.wait.OAMAccess();
     this.gfx.writeOAM32(address & 0x3FC, data | 0);
 }
 if (!!Math.imul) {
@@ -310,7 +310,7 @@ if (!!Math.imul) {
         address = address | 0;
         data = data | 0;
         this.IOCore.updateGraphicsClocking();
-        this.wait.VRAMAccess8();
+        this.wait.VRAMAccess();
         this.gfx.writePalette16(address & 0x3FE, Math.imul(data | 0, 0x101) | 0);
     }
 }
@@ -320,7 +320,7 @@ else {
         address = address | 0;
         data = data | 0;
         this.IOCore.updateGraphicsClocking();
-        this.wait.VRAMAccess8();
+        this.wait.VRAMAccess();
         this.gfx.writePalette16(address & 0x3FE, (data * 0x101) | 0);
     }
 }
@@ -328,7 +328,7 @@ GameBoyAdvanceMemory.prototype.writePalette16 = function (address, data) {
     address = address | 0;
     data = data | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess16();
+    this.wait.VRAMAccess();
     this.gfx.writePalette16(address & 0x3FE, data | 0);
 }
 GameBoyAdvanceMemory.prototype.writePalette32 = function (address, data) {
@@ -341,13 +341,13 @@ GameBoyAdvanceMemory.prototype.writePalette32 = function (address, data) {
 GameBoyAdvanceMemory.prototype.writeROM8 = function (address, data) {
     address = address | 0;
     data = data | 0;
-    this.wait.ROMAccess8(address | 0);
+    this.wait.ROMAccess(address | 0);
     this.cartridge.writeROM8(address & 0x1FFFFFF, data | 0);
 }
 GameBoyAdvanceMemory.prototype.writeROM16 = function (address, data) {
     address = address | 0;
     data = data | 0;
-    this.wait.ROMAccess16(address | 0);
+    this.wait.ROMAccess(address | 0);
     this.cartridge.writeROM16(address & 0x1FFFFFE, data | 0);
 }
 GameBoyAdvanceMemory.prototype.writeROM32 = function (address, data) {
@@ -580,14 +580,14 @@ else {
 GameBoyAdvanceMemory.prototype.readExternalWRAM8 = function (address) {
     address = address | 0;
     //External WRAM:
-    this.wait.WRAMAccess8();
+    this.wait.WRAMAccess();
     return this.externalRAM[address & 0x3FFFF] | 0;
 }
 if (__LITTLE_ENDIAN__) {
     GameBoyAdvanceMemory.prototype.readExternalWRAM16 = function (address) {
         address = address | 0;
         //External WRAM:
-        this.wait.WRAMAccess16();
+        this.wait.WRAMAccess();
         return this.externalRAM16[(address >> 1) & 0x1FFFF] | 0;
     }
     GameBoyAdvanceMemory.prototype.readExternalWRAM16CPU = function (address) {
@@ -612,7 +612,7 @@ if (__LITTLE_ENDIAN__) {
 else {
     GameBoyAdvanceMemory.prototype.readExternalWRAM16 = function (address) {
         //External WRAM:
-        this.wait.WRAMAccess16();
+        this.wait.WRAMAccess();
         return this.externalRAM[address & 0x3FFFE] | (this.externalRAM[(address | 1) & 0x3FFFF] << 8);
     }
     GameBoyAdvanceMemory.prototype.readExternalWRAM16CPU = function (address) {
@@ -782,21 +782,21 @@ GameBoyAdvanceMemory.prototype.readIODispatch32CPU = function (address) {
 GameBoyAdvanceMemory.prototype.readVRAM8 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess8();
+    this.wait.VRAMAccess();
     address = address & (((address & 0x10000) >> 1) ^ address);
     return this.gfx.readVRAM(address & 0x1FFFF) | 0;
 }
 GameBoyAdvanceMemory.prototype.readVRAM16 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess16();
+    this.wait.VRAMAccess();
     address = address & (((address & 0x10000) >> 1) ^ address);
     return this.gfx.readVRAM16(address & 0x1FFFE) | 0;
 }
 GameBoyAdvanceMemory.prototype.readVRAM16CPU = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess16();
+    this.wait.VRAMAccess();
     address = address & (((address & 0x10000) >> 1) ^ address);
     return this.gfx.readVRAM16(address & 0x1FFFE) | 0;
 }
@@ -817,43 +817,43 @@ GameBoyAdvanceMemory.prototype.readVRAM32CPU = function (address) {
 GameBoyAdvanceMemory.prototype.readOAM8 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess8();
+    this.wait.OAMAccess();
     return this.gfx.readOAM(address & 0x3FF) | 0;
 }
 GameBoyAdvanceMemory.prototype.readOAM16 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess16();
+    this.wait.OAMAccess();
     return this.gfx.readOAM16(address & 0x3FE) | 0;
 }
 GameBoyAdvanceMemory.prototype.readOAM16CPU = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess16CPU();
+    this.wait.OAMAccessCPU();
     return this.gfx.readOAM16(address & 0x3FE) | 0;
 }
 GameBoyAdvanceMemory.prototype.readOAM32 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess32();
+    this.wait.OAMAccess();
     return this.gfx.readOAM32(address & 0x3FC) | 0;
 }
 GameBoyAdvanceMemory.prototype.readOAM32CPU = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.OAMAccess32CPU();
+    this.wait.OAMAccessCPU();
     return this.gfx.readOAM32(address & 0x3FC) | 0;
 }
 GameBoyAdvanceMemory.prototype.readPalette8 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess8();
+    this.wait.VRAMAccess();
     return this.gfx.readPalette(address & 0x3FF);
 }
 GameBoyAdvanceMemory.prototype.readPalette16 = function (address) {
     address = address | 0;
     this.IOCore.updateGraphicsClocking();
-    this.wait.VRAMAccess16();
+    this.wait.VRAMAccess();
     return this.gfx.readPalette16(address & 0x3FE);
 }
 GameBoyAdvanceMemory.prototype.readPalette16CPU = function (address) {
@@ -876,12 +876,12 @@ GameBoyAdvanceMemory.prototype.readPalette32CPU = function (address) {
 }
 GameBoyAdvanceMemory.prototype.readROM8 = function (address) {
     address = address | 0;
-    this.wait.ROMAccess8(address | 0);
+    this.wait.ROMAccess(address | 0);
     return this.cartridge.readROM8(address & 0x1FFFFFF) | 0;
 }
 GameBoyAdvanceMemory.prototype.readROM16 = function (address) {
     address = address | 0;
-    this.wait.ROMAccess16(address | 0);
+    this.wait.ROMAccess(address | 0);
     return this.cartridge.readROM16(address & 0x1FFFFFE) | 0;
 }
 GameBoyAdvanceMemory.prototype.readROM16CPU = function (address) {
@@ -901,12 +901,12 @@ GameBoyAdvanceMemory.prototype.readROM32CPU = function (address) {
 }
 GameBoyAdvanceMemory.prototype.readROM28 = function (address) {
     address = address | 0;
-    this.wait.ROMAccess8(address | 0);
+    this.wait.ROMAccess(address | 0);
     return this.cartridge.readROM8Space2(address & 0x1FFFFFF) | 0;
 }
 GameBoyAdvanceMemory.prototype.readROM216 = function (address) {
     address = address | 0;
-    this.wait.ROMAccess16(address | 0);
+    this.wait.ROMAccess(address | 0);
     return this.cartridge.readROM16Space2(address & 0x1FFFFFE) | 0;
 }
 GameBoyAdvanceMemory.prototype.readROM216CPU = function (address) {
