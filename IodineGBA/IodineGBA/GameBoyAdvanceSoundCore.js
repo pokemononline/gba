@@ -319,7 +319,7 @@ GameBoyAdvanceSound.prototype.computeAudioChannels = function () {
     //Channel 4 counter:
     this.channel4.computeAudioChannel();
     //Find the number of clocks to next closest counter event:
-    this.audioClocksUntilNextEventCounter = this.audioClocksUntilNextEvent = Math.min(this.channel1.FrequencyCounter | 0, this.channel2.FrequencyCounter | 0, this.channel3.counter, this.channel4.counter | 0) | 0;
+    this.audioClocksUntilNextEventCounter = this.audioClocksUntilNextEvent = Math.min(this.channel1.FrequencyCounter | 0, this.channel2.FrequencyCounter | 0, this.channel3.counter | 0, this.channel4.counter | 0) | 0;
 }
 if (!!Math.imul) {
     //Math.imul found, insert the optimized path in:

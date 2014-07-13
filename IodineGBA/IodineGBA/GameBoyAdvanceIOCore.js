@@ -171,17 +171,17 @@ GameBoyAdvanceIO.prototype.updateCoreClocking = function () {
 }
 GameBoyAdvanceIO.prototype.updateGraphicsClocking = function () {
     //Clock gfx component:
-    this.gfx.addClocks(((this.accumulatedClocks | 0)  - (this.graphicsClocks | 0)) | 0);
+    this.gfx.addClocks(((this.accumulatedClocks | 0) - (this.graphicsClocks | 0)) | 0);
     this.graphicsClocks = this.accumulatedClocks | 0;
 }
 GameBoyAdvanceIO.prototype.updateTimerClocking = function () {
     //Clock timer component:
-    this.timer.addClocks(((this.accumulatedClocks | 0)  - (this.timerClocks | 0)) | 0);
+    this.timer.addClocks(((this.accumulatedClocks | 0) - (this.timerClocks | 0)) | 0);
     this.timerClocks = this.accumulatedClocks | 0;
 }
 GameBoyAdvanceIO.prototype.updateSerialClocking = function () {
     //Clock serial component:
-    this.serial.addClocks(((this.accumulatedClocks | 0)  - (this.serialClocks | 0)) | 0);
+    this.serial.addClocks(((this.accumulatedClocks | 0) - (this.serialClocks | 0)) | 0);
     this.serialClocks = this.accumulatedClocks | 0;
 }
 GameBoyAdvanceIO.prototype.updateCoreEventTime = function () {
@@ -190,7 +190,7 @@ GameBoyAdvanceIO.prototype.updateCoreEventTime = function () {
 }
 GameBoyAdvanceIO.prototype.getRemainingCycles = function () {
     //Return the number of cycles left until iteration end:
-    if ((this.cyclesToIterate | 0) <= 0) {
+    if ((this.cyclesToIterate | 0) < 1) {
         //Change our stepper to our end sequence:
         this.flagStepper(0x40);
         return 0;

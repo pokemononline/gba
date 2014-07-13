@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,14 +64,29 @@ GameBoyAdvanceChannel3Synth.prototype.disabled = function () {
     this.Enabled = false;
     this.counter = 0;
 }
-GameBoyAdvanceChannel3Synth.prototype.updateCache = function () {
-    if ((this.patternType | 0) != 3) {
-        this.cachedSample = this.PCM[this.lastSampleLookup | 0] >> (this.patternType | 0);
+if (!!Math.imul) {
+    //Math.imul found, insert the optimized path in:
+    GameBoyAdvanceChannel3Synth.prototype.updateCache = function () {
+        if ((this.patternType | 0) != 3) {
+            this.cachedSample = this.PCM[this.lastSampleLookup | 0] >> (this.patternType | 0);
+        }
+        else {
+            this.cachedSample = Math.imul(this.PCM[this.lastSampleLookup | 0] | 0, 3) >> 2;
+        }
+        this.outputLevelCache();
     }
-    else {
-        this.cachedSample = (this.PCM[this.lastSampleLookup | 0] * 0.75) | 0;
+}
+else {
+    //Math.imul not found, use the compatibility method:
+    GameBoyAdvanceChannel3Synth.prototype.updateCache = function () {
+        if ((this.patternType | 0) != 3) {
+            this.cachedSample = this.PCM[this.lastSampleLookup | 0] >> (this.patternType | 0);
+        }
+        else {
+            this.cachedSample = (this.PCM[this.lastSampleLookup | 0] * 0.75) | 0;
+        }
+        this.outputLevelCache();
     }
-    this.outputLevelCache();
 }
 GameBoyAdvanceChannel3Synth.prototype.outputLevelCache = function () {
     this.currentSampleLeft = (this.sound.leftChannel3) ? (this.cachedSample | 0) : 0;
