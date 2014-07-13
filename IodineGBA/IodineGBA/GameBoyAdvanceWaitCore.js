@@ -89,12 +89,12 @@ GameBoyAdvanceWait.prototype.writeWAITCNT0 = function (data) {
     this.SRAMWaitState = this.GAMEPAKWaitStateTable[data & 0x3] | 0;
     this.waitStateClocks[0x108] = this.waitStateClocks[0x109] = this.GAMEPAKWaitStateTable[(data >> 2) & 0x3] | 0;
     this.waitStateClocks[0x8] = this.waitStateClocks[0x9] =  ((data & 0x10) == 0x10) ? 0x2 : 0x3;
-    this.waitStateClocksFull[0x8] = this.waitStateClocksFull[0x9] = this.waitStateClocks[0x8] << 1;
+    this.waitStateClocksFull[0x8] = this.waitStateClocksFull[0x9] = ((((this.waitStateClocks[0x8] | 0) - 1) << 1) + 1) | 0;
     this.waitStateClocks[0x10A] = this.waitStateClocks[0x10B] = this.GAMEPAKWaitStateTable[(data >> 5) & 0x3] | 0;
     this.waitStateClocks[0xA] = this.waitStateClocks[0xB] =  (data > 0x7F) ? 0x2 : 0x5;
-    this.waitStateClocksFull[0xA] = this.waitStateClocksFull[0xB] = this.waitStateClocks[0xA] << 1;
-    this.waitStateClocksFull[0x108] = this.waitStateClocksFull[0x109] = ((this.waitStateClocks[0x108] | 0) + (this.waitStateClocks[0x8] | 0)) | 0;
-    this.waitStateClocksFull[0x10A] = this.waitStateClocksFull[0x10B] = ((this.waitStateClocks[0x10A] | 0) + (this.waitStateClocks[0xA] | 0)) | 0;
+    this.waitStateClocksFull[0xA] = this.waitStateClocksFull[0xB] = ((((this.waitStateClocks[0xA] | 0) - 1) << 1) + 1) | 0;
+    this.waitStateClocksFull[0x108] = this.waitStateClocksFull[0x109] = ((this.waitStateClocks[0x108] | 0) + (this.waitStateClocks[0x8] | 0) - 1) | 0;
+    this.waitStateClocksFull[0x10A] = this.waitStateClocksFull[0x10B] = ((this.waitStateClocks[0x10A] | 0) + (this.waitStateClocks[0xA] | 0) - 1) | 0;
     this.WAITCNT0 = data | 0;
 }
 GameBoyAdvanceWait.prototype.readWAITCNT0 = function () {
@@ -104,8 +104,8 @@ GameBoyAdvanceWait.prototype.writeWAITCNT1 = function (data) {
     data = data | 0;
     this.waitStateClocks[0x10C] = this.waitStateClocks[0x10D] = this.GAMEPAKWaitStateTable[data & 0x3] | 0;
     this.waitStateClocks[0xC] = this.waitStateClocks[0xD] =  ((data & 0x4) == 0x4) ? 0x2 : 0x9;
-    this.waitStateClocksFull[0xC] = this.waitStateClocksFull[0xD] = this.waitStateClocks[0xC] << 1;
-    this.waitStateClocksFull[0x10C] = this.waitStateClocksFull[0x10D] = ((this.waitStateClocks[0x10C] | 0) + (this.waitStateClocks[0xC] | 0)) | 0;
+    this.waitStateClocksFull[0xC] = this.waitStateClocksFull[0xD] = ((((this.waitStateClocks[0xC] | 0) - 1) << 1) + 1) | 0;
+    this.waitStateClocksFull[0x10C] = this.waitStateClocksFull[0x10D] = ((this.waitStateClocks[0x10C] | 0) + (this.waitStateClocks[0xC] | 0) - 1) | 0;
     if ((data & 0x40) == 0) {
         this.ROMPrebuffer = 0;
         this.prebufferClocks = 0;
