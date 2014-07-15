@@ -43,10 +43,18 @@ GameBoyAdvanceWindowRenderer.prototype.renderScanLine = function (line, lineBuff
     }
     if ((this.WINYCoordTop | 0) <= (line | 0) && (line | 0) < (bottom | 0)) {
         var right =  this.WINXCoordRight | 0;
-        if ((right | 0) > 240 || (this.WINXCoordLeft | 0) > (right | 0)) {
-            right = 240;
+        var left = this.WINXCoordLeft | 0;
+        if ((left | 0) <= (right | 0)) {
+            left = Math.min(left | 0, 240) | 0;
+            right = Math.min(right | 0, 240) | 0;
+            this.compositor.renderScanLine(left | 0, right | 0, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
         }
-        this.compositor.renderScanLine(this.WINXCoordLeft | 0, right | 0, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
+        else {
+            left = Math.min(left | 0, 240) | 0;
+            right = Math.min(right | 0, 240) | 0;
+            this.compositor.renderScanLine(0, right | 0, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
+            this.compositor.renderScanLine(left | 0, 240, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
+        }
     }
 }
 GameBoyAdvanceWindowRenderer.prototype.preprocess = function () {

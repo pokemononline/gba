@@ -204,8 +204,6 @@ GameBoyAdvanceWait.prototype.readConfigureWRAM32 = function () {
 }
 GameBoyAdvanceWait.prototype.CPUInternalCycleDoPrefetch = function (clocks) {
     clocks = clocks | 0;
-    //Clock for idle CPU time:
-    this.IOCore.updateCore(clocks | 0);
     //Check for ROM prefetching:
     //We were already in ROM, so if prefetch do so as sequential:
     //Only case for non-sequential ROM prefetch is invalid anyways:
@@ -254,9 +252,32 @@ GameBoyAdvanceWait.prototype.prefetchROMInRAM = function (address) {
 }
 GameBoyAdvanceWait.prototype.prefetchActiveCheck = function (clocks) {
     clocks = clocks | 0;
+    this.IOCore.updateCore(clocks | 0);
     var address = this.IOCore.cpu.registers[15] | 0;
     if ((address | 0) >= 0x8000000 && (address | 0) < 0xE000000) {
         this.prebufferClocks = ((this.prebufferClocks | 0) + (clocks | 0)) | 0;
+    }
+    else {
+        this.ROMPrebuffer = 0;
+        this.prebufferClocks = 0;
+    }
+}
+GameBoyAdvanceWait.prototype.singleClock = function () {
+    this.IOCore.updateCoreSingle();
+    var address = this.IOCore.cpu.registers[15] | 0;
+    if ((address | 0) >= 0x8000000 && (address | 0) < 0xE000000) {
+        this.prebufferClocks = ((this.prebufferClocks | 0) + 1) | 0;
+    }
+    else {
+        this.ROMPrebuffer = 0;
+        this.prebufferClocks = 0;
+    }
+}
+GameBoyAdvanceWait.prototype.prefetchActiveCheck2 = function () {
+    this.IOCore.updateCoreTwice();
+    var address = this.IOCore.cpu.registers[15] | 0;
+    if ((address | 0) >= 0x8000000 && (address | 0) < 0xE000000) {
+        this.prebufferClocks = ((this.prebufferClocks | 0) + 2) | 0;
     }
     else {
         this.ROMPrebuffer = 0;
@@ -338,14 +359,12 @@ GameBoyAdvanceWait.prototype.NonSequentialBroadcastClear = function () {
 }
 GameBoyAdvanceWait.prototype.WRAMAccess = function () {
     this.prefetchActiveCheck(this.WRAMWaitState | 0);
-    this.IOCore.updateCore(this.WRAMWaitState | 0);
 }
 GameBoyAdvanceWait.prototype.WRAMAccess16CPU = function () {
     this.IOCore.updateCore(this.WRAMWaitState | 0);
 }
 GameBoyAdvanceWait.prototype.WRAMAccess32 = function () {
     this.prefetchActiveCheck(this.WRAMWaitState << 1);
-    this.IOCore.updateCore(this.WRAMWaitState << 1);
 }
 GameBoyAdvanceWait.prototype.WRAMAccess32CPU = function () {
     this.IOCore.updateCore(this.WRAMWaitState << 1);
@@ -378,7 +397,6 @@ GameBoyAdvanceWait.prototype.ROMAccess32CPU = function (address) {
 }
 GameBoyAdvanceWait.prototype.SRAMAccess = function () {
     this.prefetchActiveCheck(this.SRAMWaitState | 0);
-    this.IOCore.updateCore(this.SRAMWaitState | 0);
 }
 GameBoyAdvanceWait.prototype.SRAMAccessCPU = function () {
     this.IOCore.updateCore(this.SRAMWaitState | 0);
@@ -388,8 +406,7 @@ GameBoyAdvanceWait.prototype.VRAMAccess = function () {
         this.singleClock();
     }
     else {
-        this.prefetchActiveCheck(2);
-        this.IOCore.updateCoreTwice();
+        this.prefetchActiveCheck2();
     }
 }
 GameBoyAdvanceWait.prototype.VRAMAccess16CPU = function () {
@@ -402,12 +419,10 @@ GameBoyAdvanceWait.prototype.VRAMAccess16CPU = function () {
 }
 GameBoyAdvanceWait.prototype.VRAMAccess32 = function () {
     if (!this.IOCore.gfx.isRendering) {
-        this.prefetchActiveCheck(2);
-        this.IOCore.updateCoreTwice();
+        this.prefetchActiveCheck2();
     }
     else {
         this.prefetchActiveCheck(4);
-        this.IOCore.updateCore(4);
     }
 }
 GameBoyAdvanceWait.prototype.VRAMAccess32CPU = function () {
@@ -423,8 +438,7 @@ GameBoyAdvanceWait.prototype.OAMAccess = function () {
         this.singleClock();
     }
     else {
-        this.prefetchActiveCheck(2);
-        this.IOCore.updateCoreTwice();
+        this.prefetchActiveCheck2();
     }
 }
 GameBoyAdvanceWait.prototype.OAMAccessCPU = function () {
@@ -434,8 +448,4 @@ GameBoyAdvanceWait.prototype.OAMAccessCPU = function () {
     else {
         this.IOCore.updateCoreTwice();
     }
-}
-GameBoyAdvanceWait.prototype.singleClock = function () {
-    this.prefetchActiveCheck(1);
-    this.IOCore.updateCoreSingle();
 }
