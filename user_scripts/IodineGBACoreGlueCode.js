@@ -56,6 +56,7 @@ var games = {
     "tmnt":"Teenage Mutant Ninja Turtles",
     "sims_bustin_out":"The Sims: Bustin' Out",
     "sims2":"The Sims 2",
+    "warioland4":"Wario Land 4",
     "wario_ware":"Wario Ware Inc"
 };
 var Iodine = null;
