@@ -101,7 +101,7 @@ if (__LITTLE_ENDIAN__) {
         yTileStart = yTileStart | 0;
         xTileStart = xTileStart | 0;
         //Find the tile code to locate the tile block:
-        var address = (this.computeTileNumber(yTileStart | 0, xTileStart | 0) + this.BGScreenBaseBlock) | 0;
+        var address = ((this.computeTileNumber(yTileStart | 0, xTileStart | 0) | 0) + (this.BGScreenBaseBlock | 0)) | 0;
         return this.VRAM16[address & 0x7FFF] | 0;
     }
 }
