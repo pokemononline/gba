@@ -101,14 +101,14 @@ if (__LITTLE_ENDIAN__) {
         yTileStart = yTileStart | 0;
         xTileStart = xTileStart | 0;
         //Find the tile code to locate the tile block:
-        var address = this.computeTileNumber(yTileStart | 0, xTileStart | 0) | this.BGScreenBaseBlock;
+        var address = (this.computeTileNumber(yTileStart | 0, xTileStart | 0) + this.BGScreenBaseBlock) | 0;
         return this.VRAM16[address & 0x7FFF] | 0;
     }
 }
 else {
     GameBoyAdvanceBGTEXTRenderer.prototype.fetchTile = function (yTileStart, xTileStart) {
         //Find the tile code to locate the tile block:
-        var address = ((this.computeTileNumber(yTileStart, xTileStart) | this.BGScreenBaseBlock) << 1) & 0xFFFF;
+        var address = ((this.computeTileNumber(yTileStart, xTileStart) + this.BGScreenBaseBlock) << 1) & 0xFFFF;
         return (this.VRAM[address | 1] << 8) | this.VRAM[address];
     }
 }

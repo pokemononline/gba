@@ -17,12 +17,14 @@
  */
 var games = {
     "advancewars":"Advance Wars",
+    "advancewars2":"Advance Wars 2",
     "alienhominid":"Alien Hominid",
     "bubblebobble":"Bubble Bobble",
     "gamewatch4":"Game & Watch Gallery 4",
     "gunstar_super_heroes":"Gunstar Super Heroes",
     "kirbymirror":"Kirby & The Amazing Mirror",
     "kirbynightmare":"Kirby: Nightmare in Dreamland",
+    "mariokart":"Mario Kart: Super Circuit",
     "marioparty":"Mario Party Advance",
     "mariopinball":"Mario Pinball Land",
     "megamanbass":"Megaman & Bass",
