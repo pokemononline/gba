@@ -2,7 +2,7 @@
 /*
  * This file is part of IodineGBA
  *
- * Copyright (C) 2012-2013 Grant Galitz
+ * Copyright (C) 2012-2014 Grant Galitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,17 +31,14 @@ function GameBoyAdvanceWindowRenderer(gfx) {
     this.preprocess();
 }
 GameBoyAdvanceWindowRenderer.prototype.renderScanLine = function (line, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer) {
+    line = line | 0;
     //Arrange our layer stack so we can remove disabled and order for correct edge case priority:
     OBJBuffer = (this.WINOBJ) ? OBJBuffer : null;
     BG0Buffer = (this.WINBG0) ? BG0Buffer : null;
     BG1Buffer = (this.WINBG1) ? BG1Buffer : null;
     BG2Buffer = (this.WINBG2) ? BG2Buffer : null;
     BG3Buffer = (this.WINBG3) ? BG3Buffer : null;
-    var bottom = this.WINYCoordBottom | 0;
-    if ((this.WINYCoordTop | 0) > (bottom | 0)) {
-        bottom = 160;
-    }
-    if ((this.WINYCoordTop | 0) <= (line | 0) && (line | 0) < (bottom | 0)) {
+    if (this.checkYRange(line | 0)) {
         var right =  this.WINXCoordRight | 0;
         var left = this.WINXCoordLeft | 0;
         if ((left | 0) <= (right | 0)) {
@@ -55,6 +52,17 @@ GameBoyAdvanceWindowRenderer.prototype.renderScanLine = function (line, lineBuff
             this.compositor.renderScanLine(0, right | 0, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
             this.compositor.renderScanLine(left | 0, 240, lineBuffer, OBJBuffer, BG0Buffer, BG1Buffer, BG2Buffer, BG3Buffer);
         }
+    }
+}
+GameBoyAdvanceWindowRenderer.prototype.checkYRange = function (line) {
+    line = line | 0;
+    var bottom = this.WINYCoordBottom | 0;
+    var top = this.WINYCoordTop | 0;
+    if ((top | 0) <= (bottom | 0)) {
+        return ((line | 0) >= (top | 0) && (line | 0) < (bottom | 0));
+    }
+    else {
+        return ((line | 0) < (top | 0) || (line | 0) >= (bottom | 0));
     }
 }
 GameBoyAdvanceWindowRenderer.prototype.preprocess = function () {
