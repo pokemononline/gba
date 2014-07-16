@@ -43,17 +43,20 @@ var games = {
     "sonic_advance2":"Sonic Advance 2",
     "sonic_advance3":"Sonic Advance 3",
     "sonicbattle":"Sonic Battle",
-    "supermonkeyballjr":"Super Monkey Ball Jr.",
+    "supermonkeyballjr":"Super Monkey Ball Jr",
     "superstar":"Mario & Luigi: Superstar Saga",
     "supermarioadvance":"Super Mario Advance",
+    "supermarioadvance4":"Super Mario Advance 4",
     "simpsons":"The Simpsons: Road Rage",
     "sonicpinball":"Sonic Pinball",
     "super_street_fighter_2_turbo_revival":"Super Street Fighter II: Turbo Revival",
+    "super_street_fighter_3_alpha":"Super Street Fighter III: Alpha",
     "tak2_staff_of_dreams":"Tak 2: The Staff of Dreams",
     "tetris_worlds":"Tetris Worlds",
     "tmnt":"Teenage Mutant Ninja Turtles",
     "sims_bustin_out":"The Sims: Bustin' Out",
-    "sims2":"The Sims 2"
+    "sims2":"The Sims 2",
+    "wario_ware":"Wario Ware Inc"
 };
 var Iodine = null;
 var Blitter = null;
