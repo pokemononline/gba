@@ -46,6 +46,8 @@ var games = {
     "supermonkeyballjr":"Super Monkey Ball Jr",
     "superstar":"Mario & Luigi: Superstar Saga",
     "supermarioadvance":"Super Mario Advance",
+    "supermarioadvance2":"Super Mario Advance 2",
+    "supermarioadvance3":"Super Mario Advance 3",
     "supermarioadvance4":"Super Mario Advance 4",
     "simpsons":"The Simpsons: Road Rage",
     "sonicpinball":"Sonic Pinball",

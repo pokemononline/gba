@@ -58,7 +58,7 @@ GameBoyAdvanceEEPROMChip.prototype.read8 = function () {
 GameBoyAdvanceEEPROMChip.prototype.read16 = function () {
     var data = 1;
     switch (this.mode | 0) {
-        case 0x5:
+        case 0x7:
             //Return 4 junk 0 bits:
             data = 0;
             if ((this.bitsProcessed | 0) < 3) {
@@ -69,10 +69,10 @@ GameBoyAdvanceEEPROMChip.prototype.read16 = function () {
                 //Reset our bits counter:
                 this.bitsProcessed = 0;
                 //Change mode for the actual reads:
-                this.mode = 6;
+                this.mode = 8;
             }
             break;
-        case 0x6:
+        case 0x8:
             //Return actual serial style data:
             var address = ((this.bitsProcessed >> 3) + (this.address | 0)) | 0;
             data = (this.saves[address | 0] >> ((0x7 - (this.bitsProcessed & 0x7)) | 0)) & 0x1;
@@ -110,19 +110,21 @@ GameBoyAdvanceEEPROMChip.prototype.write16 = function (data) {
                 break;
                 //Address Mode (Write):
             case 0x2:
-                this.addressModeForWrite(data | 0);
-                break;
                 //Address Mode (Read):
             case 0x3:
-                this.addressModeForRead(data | 0);
+                this.addressMode(data | 0);
                 break;
                 //Write Mode:
             case 0x4:
                 this.writeMode(data | 0);
                 break;
-                //Read Mode:
+                //Ending bit of addressing:
             case 0x5:
             case 0x6:
+                this.endAddressing();
+                break;
+                //Read Mode:
+            default:
                 this.resetMode();
         }
     }
@@ -139,7 +141,7 @@ GameBoyAdvanceEEPROMChip.prototype.selectMode = function (data) {
     //Read the mode bit:
     this.mode = 0x2 | data;
 }
-GameBoyAdvanceEEPROMChip.prototype.addressModeForWrite = function (data) {
+GameBoyAdvanceEEPROMChip.prototype.addressMode = function (data) {
     data = data | 0;
     //Shift in our address bit:
     this.address = (this.address << 1) | data;
@@ -147,44 +149,16 @@ GameBoyAdvanceEEPROMChip.prototype.addressModeForWrite = function (data) {
     this.bitsProcessed = ((this.bitsProcessed | 0) + 1) | 0;
     //Check for how many bits we've shifted in:
     switch (this.bitsProcessed | 0) {
+        //6 bit address mode:
         case 0x6:
-            //6 bit address mode:
-            if (this.IOCore.dma.channels[3].wordCountShadow < 0x4A && (this.largestSizePossible | 0) == 0x200) {
-                this.changeModeToActive();
-            }
-            else {
+            if ((this.IOCore.dma.channels[3].wordCountShadow | 0) >= (((this.mode | 0) == 2) ? 0x4A : 0xA)) {
                 this.largestSizePossible = 0x2000;
                 this.allocate();
+                break;
             }
-            break;
+        //14 bit address mode:
         case 0xE:
-            //14 bit address mode:
             this.changeModeToActive();
-    }
-}
-GameBoyAdvanceEEPROMChip.prototype.addressModeForRead = function (data) {
-    data = data | 0;
-    //Check for how many bits we've shifted in:
-    switch (this.bitsProcessed | 0) {
-        case 0x6:
-            //6 bit address mode:
-            if (this.IOCore.dma.channels[3].wordCountShadow < 0xA && (this.largestSizePossible | 0) == 0x200) {
-                this.changeModeToActive();
-            }
-            else {
-                this.largestSizePossible = 0x2000;
-                this.allocate();
-            }
-            break;
-        case 0xE:
-            //14 bit address mode:
-            this.changeModeToActive();
-            break;
-        default:
-            //Shift in our address bit:
-            this.address = (this.address << 1) | data;
-            //Increment our bits counter:
-            this.bitsProcessed = ((this.bitsProcessed | 0) + 1) | 0;
     }
 }
 GameBoyAdvanceEEPROMChip.prototype.changeModeToActive = function () {
@@ -199,18 +173,13 @@ GameBoyAdvanceEEPROMChip.prototype.changeModeToActive = function () {
 }
 GameBoyAdvanceEEPROMChip.prototype.writeMode = function (data) {
     data = data | 0;
-    if ((this.bitsProcessed | 0) < 0x40) {
-        //Push a bit into the buffer:
-        this.pushBuffer(data | 0);
-        //Save on last write bit push:
-        if ((this.bitsProcessed | 0) == 0x40) {
-            //64 bits buffered, so copy our buffer to the save data:
-            this.copyBuffer();
-        }
-    }
-    else {
-        //Reset back to initial:
-        this.resetMode();
+    //Push a bit into the buffer:
+    this.pushBuffer(data | 0);
+    //Save on last write bit push:
+    if ((this.bitsProcessed | 0) == 0x40) {
+        //64 bits buffered, so copy our buffer to the save data:
+        this.copyBuffer();
+        this.mode = 6;
     }
 }
 GameBoyAdvanceEEPROMChip.prototype.pushBuffer = function (data) {
@@ -225,6 +194,9 @@ GameBoyAdvanceEEPROMChip.prototype.copyBuffer = function () {
     for (var index = 0; (index | 0) < 8; index = ((index | 0) + 1) | 0) {
         this.saves[this.address | index] = this.buffer[index & 0x7] & 0xFF;
     }
+}
+GameBoyAdvanceEEPROMChip.prototype.endAddressing = function () {
+    this.mode = ((this.mode | 0) + 2) | 0;
 }
 GameBoyAdvanceEEPROMChip.prototype.resetMode = function () {
     //Reset back to idle:
