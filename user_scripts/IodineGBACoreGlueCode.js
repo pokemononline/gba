@@ -59,7 +59,8 @@ var games = {
     "sims_bustin_out":"The Sims: Bustin' Out",
     "sims2":"The Sims 2",
     "warioland4":"Wario Land 4",
-    "wario_ware":"Wario Ware Inc"
+    "wario_ware":"Wario Ware Inc",
+    "zelda_minish":"The Legend of Zelda: The Minish Cap"
 };
 var Iodine = null;
 var Blitter = null;

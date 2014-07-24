@@ -462,8 +462,10 @@ GameBoyAdvanceGraphics.prototype.readDISPSTAT0 = function () {
 GameBoyAdvanceGraphics.prototype.writeDISPSTAT1 = function (data) {
     data = data | 0;
     //V-Counter match value:
-    this.VCounter = data | 0;
-    this.checkVCounter();
+    if ((data | 0) != (this.VCounter | 0)) {
+        this.VCounter = data | 0;
+        this.checkVCounter();
+    }
 }
 GameBoyAdvanceGraphics.prototype.readDISPSTAT1 = function () {
     return this.VCounter | 0;
